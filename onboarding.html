@@ -3,28 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Treinamentos - Acelera CS</title>
+    <title>Registro de Treinamento - Acelera CS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js"></script>
+    <script src="auth.js"></script>
     <style>
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
       }
       body {
         background-color: #f1f2f7;
         display: flex;
         min-height: 100vh;
         color: #1a1d24;
+        font-size: 14px;
+        line-height: 1.5;
+        letter-spacing: -0.01em;
       }
-      
-      /* --- CONTEÚDO PRINCIPAL --- */
+
       .main-content {
         margin-left: 250px;
         flex: 1;
@@ -34,383 +41,799 @@
         flex-direction: column;
         align-items: center;
       }
-      .container {
-        width: 100%;
-        max-width: 900px;
-      }
+      .container { width: 100%; max-width: 900px; }
       .page-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         margin-bottom: 25px;
-      }
-      .header-actions {
-        display: flex;
-        gap: 10px;
-        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
       }
       .page-title {
         color: #1a1d24;
-        font-size: 1.6rem;
+        font-size: 1.75rem;
         font-weight: 700;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
       }
       .subtitle {
         color: #9499a6;
+        font-size: 0.9rem;
+        margin-top: 6px;
+        font-weight: 400;
+      }
+      .hidden { display: none !important; }
+
+      /* --- BUSCA --- */
+      .search-wrapper {
+        position: relative;
+        margin-bottom: 16px;
+      }
+      .search-wrapper input {
+        width: 100%;
+        padding: 12px 40px 12px 42px;
+        border: 1px solid #e4e6f1;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: #1a1d24;
+        background: #ffffff;
+        outline: none;
+        font-family: inherit;
+        transition: all 0.15s;
+        letter-spacing: -0.005em;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      }
+      .search-wrapper input:focus {
+        border-color: #6226ef;
+        box-shadow: 0 0 0 3px rgba(98, 38, 239, 0.12);
+      }
+      .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
         font-size: 0.95rem;
-        margin-top: 4px;
+        color: #9499a6;
+        pointer-events: none;
       }
-      .hidden {
-        display: none !important;
+      .search-clear {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #f1f2f7;
+        border: none;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        font-size: 0.9rem;
+        color: #64748b;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        font-family: inherit;
       }
+      .search-clear:hover { background: #e4e6f1; color: #1a1d24; }
+      .search-wrapper.has-value .search-clear { display: flex; }
+      .search-results-label {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 14px;
+        display: none;
+      }
+      .search-results-label.visible { display: block; }
+      .search-results-label b { color: #6226ef; }
+
       /* --- BOTÕES --- */
       .btn-primary {
-        padding: 12px 20px;
+        padding: 10px 18px;
         background-color: #6226ef;
         color: #ffffff;
         border: none;
-        border-radius: 10px;
-        font-size: 0.9rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.15s;
+        font-family: inherit;
       }
-      .btn-primary:hover {
-        background-color: #4e1cd1;
-      }
+      .btn-primary:hover { background-color: #4e1cd1; }
       .btn-secondary {
-        padding: 12px 20px;
+        padding: 10px 16px;
         background-color: #ffffff;
         color: #1a1d24;
         border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        font-size: 0.9rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
       }
       .btn-secondary:hover {
         background-color: #f8f7ff;
         border-color: #6226ef;
         color: #6226ef;
       }
-      .btn-danger {
-        padding: 12px 20px;
-        background-color: #ef4444;
-        color: #ffffff;
-        border: none;
-        border-radius: 10px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
-      .btn-danger:hover {
-        background-color: #dc2626;
-      }
-      .btn-export {
-        padding: 12px 20px;
-        background-color: #6226ef;
-        color: #ffffff;
-        border: none;
-        border-radius: 10px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .btn-export:hover {
-        background-color: #4e1cd1;
-      }
       .btn-outline {
-        padding: 10px 16px;
+        padding: 9px 16px;
         background: transparent;
         border: 1px dashed #6226ef;
         color: #6226ef;
         border-radius: 8px;
         font-weight: 600;
+        font-size: 0.85rem;
         cursor: pointer;
-        margin-top: 10px;
+        transition: all 0.15s;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        transition: all 0.2s;
+        font-family: inherit;
       }
-      .btn-outline:hover {
-        background: #f3f0ff;
-      }
-      /* --- CARDS & FORMULÁRIOS --- */
+      .btn-outline:hover { background: #f3f0ff; }
+
+      /* --- CARDS --- */
       .card {
         background: #ffffff;
-        padding: 32px;
-        border-radius: 16px;
+        padding: 0;
+        border-radius: 14px;
         border: 1px solid #e4e6f1;
         margin-bottom: 24px;
+        overflow: hidden;
       }
-      .card-title {
-        font-size: 1.15rem;
-        font-weight: 700;
+
+      /* --- SUBGUIAS --- */
+      .sub-tabs {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid #f1f2f7;
+        padding: 6px 8px 0;
+      }
+      .sub-tab-btn {
+        padding: 11px 18px;
+        border: none;
+        background: transparent;
+        color: #9499a6;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: all 0.15s;
+        border-radius: 6px 6px 0 0;
+        font-family: inherit;
+      }
+      .sub-tab-btn:hover { color: #6226ef; background: #fafafc; }
+      .sub-tab-btn.active {
         color: #6226ef;
-        margin-bottom: 20px;
+        border-bottom-color: #6226ef;
+        background: #fafafc;
+      }
+      .sub-tab-content { display: none; padding: 24px 28px 28px; }
+      .sub-tab-content.active { display: block; }
+
+      /* --- LISTA DE ITENS --- */
+      .items-list { display: flex; flex-direction: column; gap: 12px; }
+      .empty-state {
+        text-align: center;
+        color: #9499a6;
+        padding: 40px 20px;
+        font-size: 0.875rem;
+      }
+      .item-card {
+        background: #fafafc;
+        border: 1px solid #e4e6f1;
+        border-radius: 10px;
+        padding: 16px 18px;
+        transition: all 0.15s;
+        cursor: pointer;
+      }
+      .item-card:hover {
+        border-color: #c4b5fd;
+        box-shadow: 0 1px 6px rgba(98, 38, 239, 0.06);
+      }
+      .item-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      .item-card-title {
+        font-weight: 700;
+        color: #1a1d24;
+        font-size: 0.95rem;
+        flex: 1;
+        word-break: break-word;
+      }
+      .item-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+      .btn-icon {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #1a1d24;
+        transition: all 0.15s;
+        white-space: nowrap;
+        font-family: inherit;
+      }
+      .btn-icon:hover {
+        background: #f3f0ff;
+        border-color: #6226ef;
+        color: #6226ef;
+      }
+      .btn-icon.danger:hover {
+        background: #fee2e2;
+        border-color: #ef4444;
+        color: #ef4444;
+      }
+      .item-card-body {
+        font-size: 0.85rem;
+        color: #475569;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 100px;
+        overflow: hidden;
+        position: relative;
+      }
+      .item-card-body::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 24px;
+        background: linear-gradient(transparent, #fafafc);
+        pointer-events: none;
+      }
+      .item-card-category {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: #f3f0ff;
+        color: #6226ef;
+        border: 1px solid #e2d9ff;
+      }
+      mark {
+        background: #fef3c7;
+        color: inherit;
+        padding: 0 2px;
+        border-radius: 3px;
+      }
+
+      /* --- MODAL --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        z-index: 500;
         display: flex;
         align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .modal-container {
+        background: #ffffff;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 780px;
+        max-height: 92vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .modal-container.expanded { max-width: 1100px; max-height: 95vh; }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 26px;
+        border-bottom: 1px solid #e4e6f1;
+        flex-shrink: 0;
+      }
+      .modal-header h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #1a1d24;
+        letter-spacing: -0.025em;
+      }
+      .modal-close {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        color: #9499a6;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 10px;
+        border-radius: 6px;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .modal-close:hover { background: #f1f2f7; color: #ef4444; }
+      .modal-body { padding: 22px 26px; overflow-y: auto; flex: 1; }
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
         gap: 10px;
+        padding: 16px 26px;
+        border-top: 1px solid #e4e6f1;
+        flex-shrink: 0;
+        background: #fafafc;
       }
-      .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-      }
+
+      /* --- FORM --- */
       .form-group {
         display: flex;
         flex-direction: column;
+        margin-bottom: 16px;
       }
-      .form-group.full-width {
-        grid-column: span 2;
-      }
+      .form-group:last-child { margin-bottom: 0; }
       label {
-        margin-bottom: 8px;
+        margin-bottom: 7px;
         color: #1a1d24;
         font-weight: 600;
-        font-size: 0.88rem;
+        font-size: 0.82rem;
       }
       input[type='text'],
       input[type='date'],
-      input[type='number'],
+      input[type='time'],
       select,
       textarea {
         width: 100%;
-        padding: 12px 14px;
+        padding: 10px 13px;
         border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        font-size: 0.95rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
         color: #1a1d24;
         outline: none;
         background: #ffffff;
+        font-family: inherit;
+        transition: all 0.15s;
       }
       input:focus,
       select:focus,
       textarea:focus {
         border-color: #6226ef;
-        box-shadow: 0 0 0 3px rgba(98, 38, 239, 0.15);
+        box-shadow: 0 0 0 3px rgba(98, 38, 239, 0.12);
       }
-      /* --- CHECKBOX / TOGGLE POTENCIAL KOLMEYA --- */
-      .kolmeya-toggle {
+
+      /* --- EDITOR RICO --- */
+      .editor-wrapper {
+        position: relative;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #ffffff;
+        transition: all 0.15s;
+      }
+      .editor-wrapper:focus-within {
+        border-color: #6226ef;
+        box-shadow: 0 0 0 3px rgba(98, 38, 239, 0.12);
+      }
+      .editor-toolbar {
+        display: flex;
+        gap: 3px;
+        padding: 7px 9px;
+        border-bottom: 1px solid #f1f2f7;
+        background: #fafafc;
+        border-radius: 8px 8px 0 0;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .toolbar-btn {
+        padding: 5px 9px;
+        border: 1px solid transparent;
+        background: transparent;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.15s;
+        min-width: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+      }
+      .toolbar-btn:hover {
+        background: #f3f0ff;
+        color: #6226ef;
+        border-color: #e2d9ff;
+      }
+      .toolbar-btn.is-active {
+        background: #6226ef;
+        color: #ffffff;
+        border-color: #6226ef;
+      }
+      .toolbar-sep {
+        width: 1px;
+        background: #e4e6f1;
+        margin: 0 4px;
+        align-self: stretch;
+      }
+      .editor-content {
+        min-height: 260px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        color: #1a1d24;
+        outline: none;
+      }
+      .editor-content:empty::before {
+        content: attr(data-placeholder);
+        color: #94a3b8;
+        pointer-events: none;
+      }
+      .editor-content b,
+      .editor-content strong { font-weight: 700; }
+      .editor-content i,
+      .editor-content em { font-style: italic; }
+      .editor-content s,
+      .editor-content strike { text-decoration: line-through; }
+      .editor-content code {
+        font-family: 'Courier New', monospace;
+        background: #f1f2f7;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .editor-content blockquote {
+        border-left: 3px solid #6226ef;
+        padding-left: 12px;
+        color: #64748b;
+        margin: 6px 0;
+      }
+      .editor-content ol,
+      .editor-content ul {
+        padding-left: 22px;
+        margin: 6px 0;
+      }
+      .editor-content li { margin-bottom: 2px; }
+
+      /* --- RESIZE HANDLE --- */
+      .editor-resize-handle {
+        height: 14px;
+        background: #fafafc;
+        border-top: 1px solid #f1f2f7;
+        border-radius: 0 0 8px 8px;
+        cursor: ns-resize;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        user-select: none;
+      }
+      .editor-resize-handle::before {
+        content: '';
+        width: 32px;
+        height: 3px;
+        border-radius: 2px;
+        background: #cbd5e1;
+        transition: background 0.15s;
+      }
+      .editor-resize-handle:hover::before { background: #6226ef; }
+
+      .editor-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        font-size: 0.78rem;
+        color: #9499a6;
+      }
+      .btn-expand {
+        background: transparent;
+        border: none;
+        color: #6226ef;
+        font-weight: 600;
+        font-size: 0.78rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-family: inherit;
+        transition: all 0.15s;
+      }
+      .btn-expand:hover { background: #f3f0ff; }
+
+      /* --- FLOATING MENU --- */
+      .floating-menu {
+        position: absolute;
+        background: #1a1d24;
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 5px;
+        display: flex;
+        gap: 3px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        z-index: 600;
+        animation: fadeIn 0.12s ease;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .floating-menu::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #1a1d24;
+      }
+      .floating-btn {
+        padding: 5px 9px;
+        border: none;
+        background: transparent;
+        color: #ffffff;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 700;
+        transition: background 0.15s;
+        min-width: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+      }
+      .floating-btn:hover { background: #6226ef; }
+      .floating-btn.is-active { background: #6226ef; }
+
+      /* --- PREVIEW WHATSAPP MOBILE --- */
+      .wa-preview-wrapper { display: flex; justify-content: center; margin-top: 10px; }
+      .wa-phone {
+        width: 100%;
+        max-width: 380px;
+        background: #0b141a;
+        border-radius: 32px;
+        padding: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+        position: relative;
+      }
+      .wa-phone-screen {
+        background: #ece5dd;
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 520px;
+        position: relative;
+      }
+      .wa-phone-screen::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4) 0px, transparent 2px),
+          radial-gradient(circle at 70% 60%, rgba(255,255,255,0.3) 0px, transparent 2px),
+          radial-gradient(circle at 40% 80%, rgba(255,255,255,0.35) 0px, transparent 2px),
+          radial-gradient(circle at 85% 20%, rgba(255,255,255,0.3) 0px, transparent 2px),
+          radial-gradient(circle at 10% 70%, rgba(255,255,255,0.3) 0px, transparent 2px);
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .wa-header {
+        background: #075e54;
+        color: #ffffff;
+        padding: 12px 16px;
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 14px 18px;
-        border: 2px solid #cbd5e1;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background: #ffffff;
-        user-select: none;
+        position: relative;
+        z-index: 2;
+        flex-shrink: 0;
       }
-      .kolmeya-toggle.active {
-        background: #f3f0ff;
-        border-color: #6226ef;
-        color: #6226ef;
-      }
-      .kolmeya-toggle input[type='checkbox'] {
-        width: 20px;
-        height: 20px;
-        accent-color: #6226ef;
-        cursor: pointer;
-      }
-      .kolmeya-toggle-label {
+      .wa-back { font-size: 1.2rem; color: #ffffff; line-height: 1; }
+      .wa-avatar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: #25d366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
         font-weight: 700;
         font-size: 0.95rem;
+        flex-shrink: 0;
       }
-      /* --- BADGES DE STATUS --- */
-      .badge-kolmeya {
-        background: #f3f0ff;
-        color: #6226ef;
-        border: 1px solid #e2d9ff;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        display: inline-block;
-      }
-      /* --- NAV FIXA / QUICK JUMP PARAS SEÇÕES --- */
-      .section-nav-sticky {
-        position: sticky;
-        top: 20px;
-        z-index: 90;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(8px);
-        padding: 8px;
-        border-radius: 12px;
-        border: 1px solid #e4e6f1;
-        display: flex;
-        gap: 8px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-      }
-      .nav-anchor-btn {
+      .wa-contact-info { flex: 1; display: flex; flex-direction: column; }
+      .wa-contact-name { font-size: 0.95rem; font-weight: 600; line-height: 1.2; }
+      .wa-contact-status { font-size: 0.72rem; opacity: 0.85; }
+      .wa-header-icons { display: flex; gap: 14px; font-size: 1.1rem; }
+      .wa-chat-area {
         flex: 1;
-        padding: 10px;
-        border: none;
-        background: transparent;
-        color: #9499a6;
-        font-weight: 600;
-        font-size: 0.88rem;
-        border-radius: 8px;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.2s;
-      }
-      .nav-anchor-btn:hover,
-      .nav-anchor-btn.active {
-        background: #f3f0ff;
-        color: #6226ef;
-      }
-      /* --- TABELA --- */
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-      }
-      .data-table th {
-        background-color: #fafafc;
-        color: #1a1d24;
-        font-weight: 700;
-        font-size: 0.85rem;
-        padding: 16px 20px;
-        border-bottom: 1px solid #e4e6f1;
-      }
-      .data-table td {
-        padding: 16px 20px;
-        border-bottom: 1px solid #f1f2f7;
-        font-size: 0.92rem;
-      }
-      .badge-status {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-      }
-      .badge-pre {
-        background: #fff3cd;
-        color: #856404;
-      }
-      .badge-progress {
-        background: #cce5ff;
-        color: #004085;
-      }
-      .badge-done {
-        background: #d4edda;
-        color: #155724;
-      }
-      .dynamic-item {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-      .btn-remove {
-        background: #fee2e2;
-        color: #ef4444;
-        border: 1px solid #fca5a5;
-        border-radius: 8px;
-        padding: 0 14px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: all 0.2s;
-      }
-      .btn-remove:hover {
-        background: #ef4444;
-        color: #ffffff;
-      }
-      /* --- CARD DE RESUMO --- */
-      .summary-card {
-        background: #ffffff;
-        border: 1px solid #e4e6f1;
-        border-radius: 14px;
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-      }
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 20px;
-      }
-      .summary-item {
-        background: #fafafc;
-        border: 1px solid #f1f2f7;
-        padding: 14px 16px;
-        border-radius: 10px;
+        overflow-y: auto;
+        padding: 16px 12px;
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
       }
-      .summary-label {
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 700;
-        color: #9499a6;
-      }
-      .summary-value {
-        font-size: 0.95rem;
+      .wa-date-pill {
+        align-self: center;
+        background: #ffffff;
+        color: #54656f;
+        font-size: 0.72rem;
         font-weight: 600;
-        color: #1a1d24;
-      }
-      .summary-section {
-        background: #fafafc;
-        border: 1px solid #f1f2f7;
-        padding: 16px;
+        padding: 4px 12px;
         border-radius: 10px;
-        margin-bottom: 16px;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+        margin-bottom: 6px;
       }
-      .summary-section:last-child {
-        margin-bottom: 0;
+      .wa-message-row { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+      .wa-bubble {
+        background: #dcf8c6;
+        border-radius: 10px 10px 2px 10px;
+        padding: 8px 12px 20px 12px;
+        max-width: 85%;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: #111b21;
+        position: relative;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       }
-      .summary-section-title {
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 700;
-        color: #9499a6;
-        margin-bottom: 10px;
+      .wa-bubble b, .wa-bubble strong { font-weight: 700; }
+      .wa-bubble i, .wa-bubble em { font-style: italic; }
+      .wa-bubble s, .wa-bubble strike, .wa-bubble del { text-decoration: line-through; }
+      .wa-bubble code {
+        font-family: 'Courier New', 'SFMono-Regular', monospace;
+        background: rgba(0,0,0,0.06);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.88em;
       }
-      .destaques-pills {
+      .wa-bubble .wa-quote {
+        border-left: 3px solid #8696a0;
+        padding: 4px 0 4px 10px;
+        margin: 4px 0;
+        color: #54656f;
+        font-style: italic;
+      }
+      .wa-bubble .wa-list-num { display: block; padding-left: 4px; }
+      .wa-bubble .wa-list-bullet { display: block; padding-left: 4px; }
+      .wa-meta {
+        position: absolute;
+        bottom: 4px;
+        right: 8px;
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.68rem;
+        color: #667781;
       }
-      .pill-destaque {
+      .wa-ticks { color: #53bdeb; font-size: 0.75rem; letter-spacing: -2px; }
+
+      /* --- PREVIEW TEXTO SIMPLES --- */
+      .preview-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        color: #6226ef;
+        margin-bottom: 10px;
+        display: block;
+        margin-top: 18px;
+      }
+      .preview-text-box {
+        background: #f8f7ff;
+        border: 1px solid #e2d9ff;
+        border-radius: 10px;
+        padding: 16px 18px;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        color: #1a1d24;
+        white-space: pre-wrap;
+        word-break: break-word;
+        min-height: 80px;
+      }
+      .preview-hint {
+        font-size: 0.78rem;
+        color: #9499a6;
+        margin-top: 10px;
+        text-align: center;
+        display: block;
+      }
+
+      /* --- MODAL DE VISUALIZAÇÃO (LEITURA) --- */
+      .view-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1d24;
+        letter-spacing: -0.025em;
+        margin-bottom: 6px;
+        line-height: 1.25;
+      }
+      .view-meta {
+        font-size: 0.78rem;
+        color: #9499a6;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .view-meta-pill {
         background: #f3f0ff;
         color: #6226ef;
         border: 1px solid #e2d9ff;
-        padding: 6px 14px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.88rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
-      .pill-destaque::before {
-        content: '•';
-        font-size: 1.2rem;
-        line-height: 0;
+      .view-body {
+        background: #fafafc;
+        border: 1px solid #e4e6f1;
+        border-radius: 12px;
+        padding: 22px 24px;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: #1a1d24;
+        letter-spacing: -0.005em;
+        word-break: break-word;
       }
-      /* TOAST NOTIFICATION */
+      .view-body b,
+      .view-body strong { font-weight: 700; }
+      .view-body i,
+      .view-body em { font-style: italic; }
+      .view-body s,
+      .view-body strike { text-decoration: line-through; }
+      .view-body code {
+        font-family: 'Courier New', monospace;
+        background: #f1f2f7;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .view-body blockquote {
+        border-left: 3px solid #6226ef;
+        padding-left: 14px;
+        color: #64748b;
+        margin: 8px 0;
+        font-style: italic;
+      }
+      .view-body ol,
+      .view-body ul {
+        padding-left: 24px;
+        margin: 8px 0;
+      }
+      .view-body li { margin-bottom: 4px; }
+
+      /* --- TOAST --- */
       .toast {
         position: fixed;
         bottom: 30px;
         right: 30px;
         background: #10b981;
         color: white;
-        padding: 14px 24px;
+        padding: 12px 22px;
         border-radius: 10px;
         font-weight: 600;
+        font-size: 0.875rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         display: flex;
         align-items: center;
@@ -418,1054 +841,1234 @@
         z-index: 1000;
         transition: opacity 0.3s ease;
       }
+
+      @media (max-width: 900px) {
+        .main-content {
+          margin-left: 0;
+          width: 100%;
+          padding: 20px 16px;
+        }
+        .sub-tab-content { padding: 18px; }
+        .modal-body { padding: 18px; }
+        .item-card-header { flex-direction: column; }
+      }
     </style>
   </head>
   <body>
-    
     <div id="sidebar-container"></div>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
-      <!-- 1. DASHBOARD DE TREINAMENTOS -->
-      <div class="container" id="viewDashboard">
+      <div class="container">
         <div class="page-header">
           <div>
-            <h2 class="page-title">Treinamentos e Onboarding</h2>
-            <p class="subtitle">
-              Faça o pré-cadastro ou continue a jornada de treinamento do
-              cliente.
-            </p>
+            <h2 class="page-title">Registro de Treinamento</h2>
+            <p class="subtitle">Gerencie passos, dicas e produtos para uso no pós-treinamento.</p>
           </div>
-          <button class="btn-primary" onclick="abrirPreCadastro()">
-            + Novo Pré-Cadastro
-          </button>
-        </div>
-        <div class="card" style="padding: 0; overflow: hidden">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Agendado Por</th>
-                <th>Data Treinamento</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaTreinamentos"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 2. FORMULÁRIO DE PRÉ-CADASTRO / EDIÇÃO -->
-      <div class="container hidden" id="viewPreCadastro">
-        <div class="page-header">
-          <div>
-            <h2 class="page-title" id="tituloFormPreCadastro">
-              Pré-Cadastro para Treinamento
-            </h2>
-            <p class="subtitle">
-              Registre ou edite as informações prévias do agendamento.
-            </p>
-          </div>
-          <button class="btn-secondary" onclick="voltarDashboard()">
-            Cancelar
-          </button>
-        </div>
-        <div class="card">
-          <form id="formPreCadastro" onsubmit="salvarPreCadastro(event)">
-            <div class="form-grid">
-              <div class="form-group full-width">
-                <label>Nome da Empresa *</label>
-                <input
-                  type="text"
-                  id="preNomeEmpresa"
-                  required
-                  placeholder="Ex: Tech Solutions"
-                />
-              </div>
-              <div class="form-group">
-                <label>Quem Agendou? *</label>
-                <input
-                  type="text"
-                  id="preQuemAgendou"
-                  required
-                  placeholder="Ex: SDR / Executivo"
-                />
-              </div>
-              <div class="form-group">
-                <label>Data do Treinamento *</label>
-                <input type="date" id="preDataTreinamento" required />
-              </div>
-
-              <!-- CAMPO: TIPO DE PLANO -->
-              <div class="form-group">
-                <label>Tipo de Plano / Pagamento *</label>
-                <select id="preTipoPagamento" required>
-                  <option value="Pré-pago">Pré-pago</option>
-                  <option value="Pós-pago">Pós-pago</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label
-                  >Já realiza ou realizou consultas em alguma plataforma?</label
-                >
-                <select
-                  id="preRealizouConsulta"
-                  onchange="togglePlataformaAnterior()"
-                >
-                  <option value="Não">Não</option>
-                  <option value="Sim">Sim</option>
-                </select>
-              </div>
-              <div class="form-group hidden" id="groupPlataformaAnterior">
-                <label>Qual plataforma já usa ou usou?</label>
-                <input
-                  type="text"
-                  id="prePlataformaAnterior"
-                  placeholder="Ex: Serasa, Neoway, Neofact, etc."
-                />
-              </div>
-              <div class="form-group">
-                <label>Já cadastrou usuário?</label>
-                <select id="preCadastrouUsuario">
-                  <option value="Não">Não</option>
-                  <option value="Sim">Sim</option>
-                </select>
-              </div>
-
-              <!-- CAMPO: POTENCIAL KOLMEYA -->
-              <div class="form-group full-width">
-                <label>Classificação Especial</label>
-                <div
-                  class="kolmeya-toggle"
-                  id="toggleKolmeyaBox"
-                  onclick="alternarKolmeya()"
-                >
-                  <input
-                    type="checkbox"
-                    id="prePotencialKolmeya"
-                    onclick="event.stopPropagation(); sincronizarKolmeya();"
-                  />
-                  <span class="kolmeya-toggle-label">⚡ Potencial Kolmeya</span>
-                </div>
-              </div>
-              <div class="form-group full-width" style="margin-top: 10px">
-                <label
-                  >Pontos de Destaque para Apresentação
-                  <span
-                    style="font-weight: 400; color: #9499a6; font-size: 0.8rem"
-                    >(Pressione Enter para adicionar mais)</span
-                  ></label
-                >
-                <div id="listaDestaquesContainer">
-                  <div class="dynamic-item">
-                    <input
-                      type="text"
-                      class="input-destaque"
-                      placeholder="Ex: Focar no módulo de relatórios"
-                      onkeydown="tratarEnterDynamic(event, this, adicionarCampoDestaque)"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="btn-outline"
-                  onclick="adicionarCampoDestaque()"
-                >
-                  + Adicionar Destaque
-                </button>
-              </div>
-              <div class="form-group full-width">
-                <label>Observações Prévias</label>
-                <textarea
-                  id="preObservacoes"
-                  rows="3"
-                  placeholder="Notas sobre a conta ou exigências especificas..."
-                ></textarea>
-              </div>
-            </div>
-            <div style="margin-top: 24px; text-align: right">
-              <button type="submit" class="btn-primary">
-                Salvar Informações
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- 3. JORNADA CONTINUA DO TREINAMENTO -->
-      <div class="container hidden" id="viewJornada">
-        <div class="page-header">
-          <div>
-            <div style="display: flex; align-items: center; gap: 10px">
-              <h2 class="page-title" id="jornadaNomeEmpresa">
-                Jornada de Treinamento
-              </h2>
-              <span id="badgeKolmeyaJornada" class="badge-kolmeya hidden"
-                >⚡ Potencial Kolmeya</span
-              >
-            </div>
-            <p class="subtitle">
-              Conduza o treinamento e registre os detalhes da conta em uma única
-              tela contínua.
-            </p>
-          </div>
-          <div class="header-actions">
-            <button class="btn-export" onclick="copiarInformacoesClipboard()">
-              Copiar
-            </button>
-            <button class="btn-secondary" onclick="editarTreinamentoAtual()">
-              Editar
-            </button>
-            <button class="btn-danger" onclick="excluirTreinamentoAtual()">
-              Excluir
-            </button>
-            <button
-              class="btn-secondary"
-              onclick="voltarDashboard()"
-              style="margin-left: 10px"
-            >
-              Voltar
-            </button>
-          </div>
+          <button class="btn-primary" onclick="abrirModalRegistro()">Registrar Treinamento</button>
         </div>
 
-        <!-- BARRA DE NAVEGAÇÃO RÁPIDA (ANCORAS) -->
-        <div class="section-nav-sticky">
-          <button
-            class="nav-anchor-btn active"
-            onclick="scrollToSection('secaoAlinhamento')"
-          >
-            1. Resumo & Alinhamento
-          </button>
-          <button
-            class="nav-anchor-btn"
-            onclick="scrollToSection('secaoMapeamento')"
-          >
-            2. Mapeamento de Perfil
-          </button>
-          <button
-            class="nav-anchor-btn"
-            onclick="scrollToSection('secaoFechamento')"
-          >
-            3. Fechamento & Produtos
-          </button>
+        <div class="search-wrapper" id="searchWrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Pesquisar em produtos, passos e dicas..."
+            oninput="onSearchInput()"
+          />
+          <button class="search-clear" id="searchClear" onclick="limparBusca()" title="Limpar busca">×</button>
+        </div>
+        <div class="search-results-label" id="searchResultsLabel"></div>
+
+        <div class="card" id="cardPrincipal">
+          <div class="sub-tabs" id="subTabs">
+            <button class="sub-tab-btn active" onclick="mudarSubGuia(event, 'guiaProdutos')">Produtos</button>
+            <button class="sub-tab-btn" onclick="mudarSubGuia(event, 'guiaPasso')">Passo a Passo</button>
+            <button class="sub-tab-btn" onclick="mudarSubGuia(event, 'guiaDica')">Dicas</button>
+          </div>
+
+          <div id="guiaProdutos" class="sub-tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <p style="color: #64748b; font-size: 0.85rem;">Produtos e módulos cadastrados.</p>
+              <button class="btn-outline" onclick="abrirModalItem('produto')">+ Adicionar Produto</button>
+            </div>
+            <div id="listaProduto" class="items-list"></div>
+          </div>
+
+          <div id="guiaPasso" class="sub-tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <p style="color: #64748b; font-size: 0.85rem;">Itens de passo a passo cadastrados.</p>
+              <button class="btn-outline" onclick="abrirModalItem('passo')">+ Adicionar Passo</button>
+            </div>
+            <div id="listaPasso" class="items-list"></div>
+          </div>
+
+          <div id="guiaDica" class="sub-tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <p style="color: #64748b; font-size: 0.85rem;">Dicas e boas práticas cadastradas.</p>
+              <button class="btn-outline" onclick="abrirModalItem('dica')">+ Adicionar Dica</button>
+            </div>
+            <div id="listaDica" class="items-list"></div>
+          </div>
+
         </div>
 
-        <!-- SEÇÃO 1: ALINHAMENTO INICIAL & RESUMO -->
-        <section id="secaoAlinhamento" class="card">
-          <div class="card-title">
-            <span>📋</span> 1. Alinhamento Inicial & Resumo do Pré-Cadastro
+        <div class="card hidden" id="cardResultados">
+          <div style="padding: 24px 28px 28px;">
+            <div id="listaResultados" class="items-list"></div>
           </div>
-          <div class="summary-card">
-            <div class="summary-grid">
-              <div class="summary-item">
-                <span class="summary-label">Agendado por</span>
-                <span class="summary-value" id="viewAgendadoPor">-</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Data do Treinamento</span>
-                <span class="summary-value" id="viewDataTreinamento">-</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Tipo de Plano</span>
-                <span class="summary-value" id="viewTipoPagamento">-</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label"
-                  >Já usa/usou Plataforma de dados?</span
-                >
-                <span class="summary-value" id="viewConsulta">-</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Cadastrou Usuário</span>
-                <span class="summary-value" id="viewUsuario">-</span>
-              </div>
-            </div>
-            <div class="summary-section">
-              <div class="summary-section-title">
-                Pontos de Destaque Mapeados
-              </div>
-              <div class="destaques-pills" id="viewListaDestaques"></div>
-            </div>
-            <div class="summary-section">
-              <div class="summary-section-title">Observações Prévias</div>
-              <p
-                id="viewObservacoesPrevias"
-                style="color: #334155; font-size: 0.92rem; line-height: 1.5"
-              >
-                -
-              </p>
-            </div>
-          </div>
-          <div class="form-group full-width">
-            <label>Participantes Presentes na Reunião</label>
-            <input
-              type="text"
-              id="jornadaParticipantes"
-              placeholder="Ex: João (Diretor), Maria (Analista)"
-              onchange="salvarProgressoJornada()"
-            />
-          </div>
-        </section>
-
-        <!-- SEÇÃO 2: MAPEAMENTO & PERFIL -->
-        <section id="secaoMapeamento" class="card">
-          <div class="card-title">
-            <span>🎯</span> 2. Mapeamento & Perfil do Cliente
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Segmento de Mercado</label>
-              <select id="jornadaSegmento" onchange="salvarProgressoJornada()">
-                <option value="">Selecione...</option>
-                <option value="Financeiro">Financeiro / Cobrança</option>
-                <option value="Varejo">Varejo / E-commerce</option>
-                <option value="Telecom">Telecom / Tecnologia</option>
-                <option value="Logística">Logística / Transporte</option>
-                <option value="Outro">Outro</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Porte da Empresa</label>
-              <select id="jornadaPorte" onchange="salvarProgressoJornada()">
-                <option value="">Selecione...</option>
-                <option value="Pequeno">Pequeno (1-10 funcionários)</option>
-                <option value="Médio">Médio (11-50 funcionários)</option>
-                <option value="Grande">Grande (50+ funcionários)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Funcionalidade Prioritária</label>
-              <select
-                id="jornadaFuncionalidade"
-                onchange="salvarProgressoJornada()"
-              >
-                <option value="">Selecione...</option>
-                <option value="Consulta Individual">Consulta Individual</option>
-                <option value="Enriquecimento">Enriquecimento</option>
-                <option value="API">API / Integração</option>
-                <option value="Consulta/Enriquecimento">Consulta / Enriquecimento</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Estimativa de Volume / Uso Mensal</label>
-              <input
-                type="number"
-                id="jornadaVolume"
-                placeholder="Ex: 5000"
-                onchange="salvarProgressoJornada()"
-              />
-            </div>
-            <div class="form-group full-width">
-              <label>Quais informações o cliente TEM na base dele?</label>
-              <textarea
-                id="jornadaInfoTemNaBase"
-                rows="2"
-                placeholder="Ex: Nome, CPF, Telefone antigo, E-mail..."
-                onchange="salvarProgressoJornada()"
-              ></textarea>
-            </div>
-            <div class="form-group full-width">
-              <label>Quais informações o cliente QUER TER / enriquecer?</label>
-              <textarea
-                id="jornadaInfoQuerTer"
-                rows="2"
-                placeholder="Ex: Telefone atualizado, Endereço, Renda presumida, Score..."
-                onchange="salvarProgressoJornada()"
-              ></textarea>
-            </div>
-            <div class="form-group full-width">
-              <label>Dúvidas Marcantes / Dificuldades Apresentadas</label>
-              <textarea
-                id="jornadaDuvidas"
-                rows="3"
-                placeholder="Anote as principais dúvidas levantadas durante o treinamento..."
-                onchange="salvarProgressoJornada()"
-              ></textarea>
-            </div>
-          </div>
-        </section>
-
-        <!-- SEÇÃO 3: FECHAMENTO & PRODUTOS APRESENTADOS -->
-        <section id="secaoFechamento" class="card">
-          <div class="card-title">
-            <span>🚀</span> 3. Fechamento & Produtos Apresentados
-          </div>
-          <div class="form-group full-width" style="margin-bottom: 20px">
-            <label
-              >Produtos / Módulos Apresentados
-              <span style="font-weight: 400; color: #9499a6; font-size: 0.8rem"
-                >(Pressione Enter para adicionar mais)</span
-              ></label
-            >
-            <div id="listaProdutosApresentadosContainer">
-              <div class="dynamic-item">
-                <input
-                  type="text"
-                  class="input-produto"
-                  placeholder="Ex: Enriquecimento de Dados, Módulo Veicular..."
-                  onkeydown="tratarEnterDynamic(event, this, adicionarCampoProduto)"
-                />
-              </div>
-            </div>
-            <button
-              type="button"
-              class="btn-outline"
-              onclick="adicionarCampoProduto()"
-            >
-              + Adicionar Produto
-            </button>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Engajamento do Cliente</label>
-              <select
-                id="jornadaEngajamento"
-                onchange="salvarProgressoJornada()"
-              >
-                <option value="Alto">
-                  Alto (Participativo / Pronto para usar)
-                </option>
-                <option value="Médio">
-                  Médio (Compreendeu, mas precisa praticar)
-                </option>
-                <option value="Baixo">
-                  Baixo (Com dificuldades / Pouco interesse)
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Status do Treinamento</label>
-              <select id="jornadaStatusFinal" onchange="salvarProgressoJornada()">
-                <option value="Concluído">Concluído - Treinamento Finalizado</option>
-                <option value="Pendente">Pendente - Novo alinhamento necessário</option>
-              </select>
-            </div>
-            <div class="form-group full-width">
-              <label>Resumo Final / Anotações do CS</label>
-              <textarea
-                id="jornadaAnotacoesFinais"
-                rows="4"
-                placeholder="Sua percepção final da conta, combinado de ações futuras..."
-                onchange="salvarProgressoJornada()"
-              ></textarea>
-            </div>
-          </div>
-          <div
-            style="
-              margin-top: 32px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            "
-          >
-            <button class="btn-secondary" onclick="voltarDashboard()">
-              Voltar ao Dashboard
-            </button>
-            <button class="btn-primary" onclick="finalizarJornada()">
-              Finalizar e Concluir Treinamento
-            </button>
-          </div>
-        </section>
+        </div>
       </div>
     </main>
 
-    <!-- TOAST NOTIFICATION -->
+    <!-- MODAL DE REGISTRO -->
+    <div id="modalRegistro" class="modal-overlay hidden">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>📝 Registrar Treinamento no CRM</h3>
+          <button class="modal-close" onclick="fecharModalRegistro()">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label>Data do Treinamento</label>
+              <input type="date" id="regData" readonly style="background: #f8f7ff; cursor: not-allowed;" />
+            </div>
+            <div class="form-group">
+              <label>Horário</label>
+              <input type="time" id="regHora" onchange="atualizarPreviewRegistro()" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Participantes (nomes)</label>
+            <input type="text" id="regNomes" placeholder="Ex: João Silva, Maria Santos" oninput="atualizarPreviewRegistro()" />
+          </div>
+          <div class="form-group">
+            <label>Necessidade / Abordagem</label>
+            <textarea id="regNecessidade" rows="2" placeholder="Descreva a necessidade abordada..." oninput="atualizarPreviewRegistro()"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Produtos Apresentados</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="regProdutoSelect" style="flex: 1;">
+                <option value="">Selecione um produto...</option>
+              </select>
+              <button type="button" class="btn-outline" style="margin: 0; padding: 10px 12px;" onclick="mostrarNovoProduto()" title="Cadastrar novo produto">+</button>
+            </div>
+            <div id="novoProdutoBox" style="display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+              <input type="text" id="regNovoProduto" placeholder="Nome do novo produto" style="flex: 1; min-width: 180px;" />
+              <button type="button" class="btn-primary" style="padding: 10px 14px; font-size: 0.82rem;" onclick="cadastrarNovoProduto()">Salvar</button>
+              <button type="button" class="btn-secondary" style="padding: 10px 14px; font-size: 0.82rem;" onclick="ocultarNovoProduto()">Cancelar</button>
+            </div>
+            <div id="produtosSelecionados" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+          </div>
+
+          <span class="preview-label">Pré-visualização do texto</span>
+          <div id="previewRegistro" class="preview-text-box"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="fecharModalRegistro()">Fechar</button>
+          <button class="btn-primary" onclick="copiarTextoRegistro()">Copiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE ITEM -->
+    <div id="modalItem" class="modal-overlay hidden">
+      <div class="modal-container" id="modalItemContainer">
+        <div class="modal-header">
+          <h3 id="modalItemTitulo">Adicionar Item</h3>
+          <button class="modal-close" onclick="fecharModalItem()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Título</label>
+            <input type="text" id="itemTitulo" placeholder="Ex: Como fazer login no sistema" />
+          </div>
+
+          <div class="form-group">
+            <label>Corpo do Texto</label>
+            <div class="editor-wrapper" id="editorWrapper">
+              <div class="editor-toolbar">
+                <button type="button" class="toolbar-btn" data-cmd="undo" title="Desfazer (Ctrl+Z)">↶</button>
+                <button type="button" class="toolbar-btn" data-cmd="redo" title="Refazer (Ctrl+Y)">↷</button>
+                <div class="toolbar-sep"></div>
+                <button type="button" class="toolbar-btn" data-cmd="bold" title="Negrito (Ctrl+B)"><b>B</b></button>
+                <button type="button" class="toolbar-btn" data-cmd="italic" title="Itálico (Ctrl+I)"><i>I</i></button>
+                <button type="button" class="toolbar-btn" data-cmd="strikeThrough" title="Tachado"><s>S</s></button>
+                <button type="button" class="toolbar-btn" data-cmd="code" title="Monoespaçado">&lt;/&gt;</button>
+                <div class="toolbar-sep"></div>
+                <button type="button" class="toolbar-btn" data-cmd="insertOrderedList" title="Lista Numerada">1.</button>
+                <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList" title="Lista com Marcadores">•</button>
+                <button type="button" class="toolbar-btn" data-cmd="blockquote" title="Citação">❝</button>
+                <div class="toolbar-sep"></div>
+                <button type="button" class="toolbar-btn" data-cmd="removeFormat" title="Limpar Formatação">🧹</button>
+              </div>
+              <div id="editorContent" class="editor-content" contenteditable="true" data-placeholder="Digite o texto aqui... Selecione uma parte para ver as opções de formatação."></div>
+              <div class="editor-resize-handle" id="editorResizeHandle" title="Arraste para redimensionar"></div>
+            </div>
+            <div class="editor-footer">
+              <span>💡 Selecione um trecho para abrir as opções rápidas de formatação.</span>
+              <button type="button" class="btn-expand" onclick="toggleExpandirEditor()" id="btnExpandir">
+                ⛶ Expandir
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="itemCategoria">
+              <option value="passo">Passo a Passo</option>
+              <option value="dica">Dica</option>
+              <option value="produto">Produto</option>
+            </select>
+          </div>
+
+          <span class="preview-label">Pré-visualização — Como o cliente verá no WhatsApp</span>
+          <div class="wa-preview-wrapper">
+            <div class="wa-phone">
+              <div class="wa-phone-screen">
+                <div class="wa-header">
+                  <span class="wa-back">←</span>
+                  <div class="wa-avatar">CS</div>
+                  <div class="wa-contact-info">
+                    <span class="wa-contact-name">Acelera CS</span>
+                    <span class="wa-contact-status">online</span>
+                  </div>
+                  <div class="wa-header-icons">
+                    <span>📞</span>
+                    <span>⋮</span>
+                  </div>
+                </div>
+                <div class="wa-chat-area">
+                  <div class="wa-date-pill">HOJE</div>
+                  <div class="wa-message-row">
+                    <div class="wa-bubble" id="waBubbleItem">
+                      <span id="waTextoItem">Preencha o título e o corpo para visualizar a mensagem...</span>
+                      <div class="wa-meta">
+                        <span id="waHoraItem">--:--</span>
+                        <span class="wa-ticks">✓✓</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="preview-hint">Esta é uma simulação de como a mensagem aparecerá no WhatsApp do seu cliente.</span>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="fecharModalItem()">Cancelar</button>
+          <button class="btn-primary" onclick="salvarItem()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE VISUALIZAÇÃO -->
+    <div id="modalView" class="modal-overlay hidden">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 id="viewCategoriaLabel">Visualizar Item</h3>
+          <button class="modal-close" onclick="fecharModalView()">×</button>
+        </div>
+        <div class="modal-body">
+          <h2 id="viewTitulo" class="view-title">Título do item</h2>
+          <div class="view-meta">
+            <span class="view-meta-pill" id="viewCategoriaPill">Produto</span>
+          </div>
+          <div id="viewCorpo" class="view-body"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="fecharModalView()">Fechar</button>
+          <button class="btn-primary" onclick="copiarItemDoModalView()">📋 Copiar</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toastNotification" class="toast hidden">
-      <span>✅ Informações copiadas para a área de transferência!</span>
+      <span>✅ Texto copiado para a área de transferência!</span>
     </div>
 
     <script>
-      let clientes = [];
-      let clienteAtualId = null;
+      let produtosCadastrados = [];
+      let produtosSelecionadosModal = [];
+      let itens = { passo: [], dica: [], produto: [] };
+      let itemEditandoId = null;
+      let itemEditandoCategoria = null;
+      let editorExpandido = false;
+      let itemViewAtual = null;
+      let buscaAtiva = '';
+
+      /* ==================== PERSISTÊNCIA ==================== */
 
       function carregarDadosDoStorage() {
-        const dadosSalvos = localStorage.getItem('acelera_cs_treinamentos');
-        if (dadosSalvos) {
-          try {
-            clientes = JSON.parse(dadosSalvos);
-          } catch (e) {
-            console.error('Erro ao ler dados do localStorage:', e);
-            clientes = [];
-          }
+        const prodsSalvos = localStorage.getItem('acelera_cs_produtos');
+        if (prodsSalvos) {
+          try { produtosCadastrados = JSON.parse(prodsSalvos); } catch (e) { produtosCadastrados = []; }
         }
-      }
-
-      function salvarDadosNoStorage() {
-        localStorage.setItem(
-          'acelera_cs_treinamentos',
-          JSON.stringify(clientes)
-        );
-      }
-
-      function alternarTela(idTela) {
-        document.getElementById('viewDashboard').classList.add('hidden');
-        document.getElementById('viewPreCadastro').classList.add('hidden');
-        document.getElementById('viewJornada').classList.add('hidden');
-        document.getElementById(idTela).classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-
-      function scrollToSection(idSecao) {
-        const el = document.getElementById(idSecao);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const itensSalvos = localStorage.getItem('acelera_cs_itens');
+        if (itensSalvos) {
+          try { itens = JSON.parse(itensSalvos); } catch (e) {}
         }
+        if (!itens.passo) itens.passo = [];
+        if (!itens.dica) itens.dica = [];
+        if (!itens.produto) itens.produto = [];
       }
 
-      function voltarDashboard() {
-        clienteAtualId = null;
-        renderizarTabela();
-        alternarTela('viewDashboard');
+      function salvarProdutosNoStorage() {
+        localStorage.setItem('acelera_cs_produtos', JSON.stringify(produtosCadastrados));
+      }
+      function salvarItensNoStorage() {
+        localStorage.setItem('acelera_cs_itens', JSON.stringify(itens));
       }
 
-      /* --- MANIPULAÇÃO DO FORMULÁRIO DE PRÉ-CADASTRO --- */
-      function abrirPreCadastro() {
-        clienteAtualId = null;
-        document.getElementById('tituloFormPreCadastro').innerText =
-          'Pré-Cadastro para Treinamento';
-        document.getElementById('formPreCadastro').reset();
-        document.getElementById('preTipoPagamento').value = 'Pré-pago';
+      /* ==================== BUSCA ==================== */
 
-        // Reset container de destaques
-        const container = document.getElementById('listaDestaquesContainer');
-        container.innerHTML = `
-          <div class="dynamic-item">
-            <input type="text" class="input-destaque" placeholder="Ex: Focar no módulo de relatórios" onkeydown="tratarEnterDynamic(event, this, adicionarCampoDestaque)" />
-          </div>
-        `;
-
-        document
-          .getElementById('groupPlataformaAnterior')
-          .classList.add('hidden');
-
-        const box = document.getElementById('toggleKolmeyaBox');
-        box.classList.remove('active');
-        document.getElementById('prePotencialKolmeya').checked = false;
-
-        alternarTela('viewPreCadastro');
+      function onSearchInput() {
+        const input = document.getElementById('searchInput');
+        const valor = input.value;
+        const wrapper = document.getElementById('searchWrapper');
+        if (valor.length > 0) wrapper.classList.add('has-value');
+        else wrapper.classList.remove('has-value');
+        buscaAtiva = valor.trim().toLowerCase();
+        aplicarBusca();
       }
 
-      function togglePlataformaAnterior() {
-        const val = document.getElementById('preRealizouConsulta').value;
-        const grp = document.getElementById('groupPlataformaAnterior');
-        if (val === 'Sim') {
-          grp.classList.remove('hidden');
-        } else {
-          grp.classList.add('hidden');
-        }
+      function limparBusca() {
+        const input = document.getElementById('searchInput');
+        input.value = '';
+        buscaAtiva = '';
+        document.getElementById('searchWrapper').classList.remove('has-value');
+        aplicarBusca();
+        input.focus();
       }
 
-      function alternarKolmeya() {
-        const chk = document.getElementById('prePotencialKolmeya');
-        chk.checked = !chk.checked;
-        sincronizarKolmeya();
+      function normalizar(str) {
+        if (!str) return '';
+        return String(str)
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
       }
 
-      function sincronizarKolmeya() {
-        const chk = document.getElementById('prePotencialKolmeya');
-        const box = document.getElementById('toggleKolmeyaBox');
-        if (chk.checked) {
-          box.classList.add('active');
-        } else {
-          box.classList.remove('active');
-        }
-      }
+      function aplicarBusca() {
+        const cardPrincipal = document.getElementById('cardPrincipal');
+        const cardResultados = document.getElementById('cardResultados');
+        const label = document.getElementById('searchResultsLabel');
 
-      function adicionarCampoDestaque(valor = '') {
-        const container = document.getElementById('listaDestaquesContainer');
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-destaque" value="${valor}" placeholder="Adicione outro ponto relevante..." onkeydown="tratarEnterDynamic(event, this, adicionarCampoDestaque)" />
-          <button type="button" class="btn-remove" onclick="removerCampoDynamic(this)">×</button>
-        `;
-        container.appendChild(div);
-        if (!valor) {
-          div.querySelector('input').focus();
-        }
-      }
-
-      function adicionarCampoProduto(valor = '') {
-        const container = document.getElementById(
-          'listaProdutosApresentadosContainer'
-        );
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-produto" value="${valor}" placeholder="Ex: API de Risco, Enriquecimento..." onkeydown="tratarEnterDynamic(event, this, adicionarCampoProduto)" />
-          <button type="button" class="btn-remove" onclick="removerCampoDynamic(this)">×</button>
-        `;
-        container.appendChild(div);
-        if (!valor) {
-          div.querySelector('input').focus();
-        }
-        salvarProgressoJornada();
-      }
-
-      function removerCampoDynamic(btn) {
-        const item = btn.parentElement;
-        const container = item.parentElement;
-        if (container.children.length > 1) {
-          item.remove();
-        } else {
-          const input = item.querySelector('input');
-          if (input) input.value = '';
-        }
-        salvarProgressoJornada();
-      }
-
-      function tratarEnterDynamic(e, input, funcAdicionar) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (input.value.trim() !== '') {
-            funcAdicionar();
-          }
-        }
-      }
-
-      function obterValoresDynamic(selectorClass) {
-        const inputs = document.querySelectorAll(selectorClass);
-        const lista = [];
-        inputs.forEach((inp) => {
-          if (inp.value.trim() !== '') {
-            lista.push(inp.value.trim());
-          }
-        });
-        return lista;
-      }
-
-      function salvarPreCadastro(event) {
-        event.preventDefault();
-
-        const nome = document.getElementById('preNomeEmpresa').value.trim();
-        const quemAgendou = document
-          .getElementById('preQuemAgendou')
-          .value.trim();
-        const dataTreinamento =
-          document.getElementById('preDataTreinamento').value;
-        const tipoPagamento = document.getElementById('preTipoPagamento').value;
-        const realizouConsulta = document.getElementById(
-          'preRealizouConsulta'
-        ).value;
-        const plataformaAnterior =
-          realizouConsulta === 'Sim'
-            ? document.getElementById('prePlataformaAnterior').value.trim()
-            : 'Não utiliza/utilizou';
-        const cadastrouUsuario = document.getElementById(
-          'preCadastrouUsuario'
-        ).value;
-        const potencialKolmeya = document.getElementById(
-          'prePotencialKolmeya'
-        ).checked;
-        const destaques = obterValoresDynamic('.input-destaque');
-        const observacoes = document
-          .getElementById('preObservacoes')
-          .value.trim();
-
-        if (clienteAtualId) {
-          const idx = clientes.findIndex((c) => c.id === clienteAtualId);
-          if (idx !== -1) {
-            clientes[idx] = {
-              ...clientes[idx],
-              nome,
-              quemAgendou,
-              dataTreinamento,
-              tipoPagamento,
-              realizouConsulta,
-              plataformaAnterior,
-              cadastrouUsuario,
-              potencialKolmeya,
-              destaques,
-              observacoes,
-            };
-          }
-        } else {
-          const novoCliente = {
-            id: Date.now().toString(),
-            nome,
-            quemAgendou,
-            dataTreinamento,
-            tipoPagamento,
-            realizouConsulta,
-            plataformaAnterior,
-            cadastrouUsuario,
-            potencialKolmeya,
-            destaques,
-            observacoes,
-            status: 'Pré-Cadastro',
-
-            // Campos de Jornada
-            participantes: '',
-            segmento: '',
-            porte: '',
-            funcionalidade: '',
-            volume: '',
-            infoTemNaBase: '',
-            infoQuerTer: '',
-            duvidas: '',
-            produtosApresentados: [],
-            engajamento: 'Alto',
-            statusFinal: 'Concluído',
-            anotacoesFinais: '',
-          };
-          clientes.push(novoCliente);
-        }
-
-        salvarDadosNoStorage();
-        voltarDashboard();
-      }
-
-      /* --- DASHBOARD E TABELA --- */
-      function renderizarTabela() {
-        const tbody = document.getElementById('tabelaTreinamentos');
-        tbody.innerHTML = '';
-
-        if (clientes.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5" style="text-align: center; color: #9499a6; padding: 30px;">
-                Nenhum treinamento cadastrado até o momento.
-              </td>
-            </tr>
-          `;
+        if (!buscaAtiva) {
+          cardPrincipal.classList.remove('hidden');
+          cardResultados.classList.add('hidden');
+          label.classList.remove('visible');
+          renderizarItens();
           return;
         }
 
-        // Ordenar por data
-        clientes.sort(
-          (a, b) => new Date(a.dataTreinamento) - new Date(b.dataTreinamento)
-        );
+        cardPrincipal.classList.add('hidden');
+        cardResultados.classList.remove('hidden');
 
-        clientes.forEach((cliente) => {
-          const tr = document.createElement('tr');
+        const termo = normalizar(buscaAtiva);
+        const resultados = [];
 
-          let badgeStatusClass = 'badge-pre';
-          if (cliente.status === 'Em Andamento')
-            badgeStatusClass = 'badge-progress';
-          if (cliente.status === 'Concluído') badgeStatusClass = 'badge-done';
+        ['produto', 'passo', 'dica'].forEach(cat => {
+          itens[cat].forEach(item => {
+            const tituloNorm = normalizar(item.titulo);
+            const corpoTexto = item.corpo || '';
+            const corpoNorm = normalizar(corpoTexto);
+            if (tituloNorm.includes(termo) || corpoNorm.includes(termo)) {
+              resultados.push({ cat, item });
+            }
+          });
+        });
 
-          const dataFmt = cliente.dataTreinamento
-            ? cliente.dataTreinamento.split('-').reverse().join('/')
-            : '-';
+        const container = document.getElementById('listaResultados');
+        container.innerHTML = '';
 
-          tr.innerHTML = `
-            <td>
-              <strong style="color: #1a1d24;">${cliente.nome}</strong>
-              ${
-                cliente.potencialKolmeya
-                  ? '<span class="badge-kolmeya" style="margin-left: 6px;">⚡ Kolmeya</span>'
-                  : ''
-              }
-              <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">Plano: ${
-                cliente.tipoPagamento || 'Não informado'
-              }</div>
-            </td>
-            <td>${cliente.quemAgendou}</td>
-            <td>${dataFmt}</td>
-            <td><span class="badge-status ${badgeStatusClass}">${
-            cliente.status
-          }</span></td>
-            <td>
-              <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="abrirJornada('${
-                cliente.id
-              }')">
-                Abrir Jornada
-              </button>
-            </td>
+        if (resultados.length === 0) {
+          label.classList.add('visible');
+          label.innerHTML = `Nenhum resultado encontrado para <b>"${escapeHtml(buscaAtiva)}"</b>.`;
+          container.innerHTML = '<div class="empty-state">Tente outro termo de pesquisa.</div>';
+          return;
+        }
+
+        label.classList.add('visible');
+        label.innerHTML = `${resultados.length} resultado${resultados.length > 1 ? 's' : ''} encontrado${resultados.length > 1 ? 's' : ''} para <b>"${escapeHtml(buscaAtiva)}"</b>.`;
+
+        resultados.forEach(({ cat, item }) => {
+          const div = document.createElement('div');
+          div.className = 'item-card';
+          div.onclick = () => abrirModalView(cat, item.id);
+          div.innerHTML = `
+            <div class="item-card-header">
+              <div class="item-card-title">${destacarTermo(item.titulo, buscaAtiva)}</div>
+              <div class="item-card-actions">
+                <button class="btn-icon" onclick="event.stopPropagation(); copiarItem('${cat}', '${item.id}')" title="Copiar texto">Copiar</button>
+                <button class="btn-icon" onclick="event.stopPropagation(); editarItem('${cat}', '${item.id}')" title="Editar">Editar</button>
+                <button class="btn-icon danger" onclick="event.stopPropagation(); excluirItem('${cat}', '${item.id}')" title="Excluir">Excluir</button>
+              </div>
+            </div>
+            <div class="item-card-body">${destacarTermo(stripHtmlToPreview(item.corpoHtml), buscaAtiva)}</div>
+            <span class="item-card-category">${labelCategoria(cat)}</span>
           `;
-          tbody.appendChild(tr);
+          container.appendChild(div);
         });
       }
 
-      /* --- CARREGAR E GERENCIAR JORNADA --- */
-      function abrirJornada(id) {
-        clienteAtualId = id;
-        const cliente = clientes.find((c) => c.id === id);
-        if (!cliente) return;
-
-        // Se o status for pré-cadastro, marca como em andamento ao abrir a jornada
-        if (cliente.status === 'Pré-Cadastro') {
-          cliente.status = 'Em Andamento';
-          salvarDadosNoStorage();
-        }
-
-        // Cabeçalho
-        document.getElementById('jornadaNomeEmpresa').innerText = cliente.nome;
-        const badgeK = document.getElementById('badgeKolmeyaJornada');
-        if (cliente.potencialKolmeya) {
-          badgeK.classList.remove('hidden');
-        } else {
-          badgeK.classList.add('hidden');
-        }
-
-        // Preencher resumo
-        document.getElementById('viewAgendadoPor').innerText =
-          cliente.quemAgendou || '-';
-        document.getElementById('viewDataTreinamento').innerText =
-          cliente.dataTreinamento
-            ? cliente.dataTreinamento.split('-').reverse().join('/')
-            : '-';
-        document.getElementById('viewTipoPagamento').innerText =
-          cliente.tipoPagamento || 'Não informado';
-        document.getElementById('viewConsulta').innerText =
-          cliente.realizouConsulta === 'Sim'
-            ? `Sim (${cliente.plataformaAnterior})`
-            : 'Não';
-        document.getElementById('viewUsuario').innerText =
-          cliente.cadastrouUsuario || '-';
-        document.getElementById('viewObservacoesPrevias').innerText =
-          cliente.observacoes || 'Sem observações prévias.';
-
-        // Destaques Pills
-        const containerDestaques =
-          document.getElementById('viewListaDestaques');
-        containerDestaques.innerHTML = '';
-        if (cliente.destaques && cliente.destaques.length > 0) {
-          cliente.destaques.forEach((d) => {
-            const pill = document.createElement('span');
-            pill.className = 'pill-destaque';
-            pill.innerText = d;
-            containerDestaques.appendChild(pill);
-          });
-        } else {
-          containerDestaques.innerHTML =
-            '<span style="color: #9499a6; font-size: 0.85rem;">Nenhum destaque registrado.</span>';
-        }
-
-        // Preencher Seção 1
-        document.getElementById('jornadaParticipantes').value =
-          cliente.participantes || '';
-
-        // Preencher Seção 2
-        document.getElementById('jornadaSegmento').value =
-          cliente.segmento || '';
-        document.getElementById('jornadaPorte').value = cliente.porte || '';
-        document.getElementById('jornadaFuncionalidade').value =
-          cliente.funcionalidade || '';
-        document.getElementById('jornadaVolume').value = cliente.volume || '';
-        document.getElementById('jornadaInfoTemNaBase').value =
-          cliente.infoTemNaBase || '';
-        document.getElementById('jornadaInfoQuerTer').value =
-          cliente.infoQuerTer || '';
-        document.getElementById('jornadaDuvidas').value = cliente.duvidas || '';
-
-        // Preencher Seção 3 (Produtos Apresentados)
-        const containerProd = document.getElementById(
-          'listaProdutosApresentadosContainer'
-        );
-        containerProd.innerHTML = '';
-        if (
-          cliente.produtosApresentados &&
-          cliente.produtosApresentados.length > 0
-        ) {
-          cliente.produtosApresentados.forEach((p) => {
-            adicionarCampoProduto(p);
-          });
-        } else {
-          adicionarCampoProduto('');
-        }
-
-        document.getElementById('jornadaEngajamento').value =
-          cliente.engajamento || 'Alto';
-        document.getElementById('jornadaStatusFinal').value =
-          cliente.statusFinal || 'Concluído';
-        document.getElementById('jornadaAnotacoesFinais').value =
-          cliente.anotacoesFinais || '';
-
-        alternarTela('viewJornada');
+      function destacarTermo(texto, termo) {
+        if (!termo) return escapeHtml(texto);
+        const escapado = escapeHtml(texto);
+        const regex = new RegExp('(' + termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        return escapado.replace(regex, '<mark>$1</mark>');
       }
 
-      function salvarProgressoJornada() {
-        if (!clienteAtualId) return;
-        const idx = clientes.findIndex((c) => c.id === clienteAtualId);
-        if (idx === -1) return;
+      /* ==================== SUBGUIAS ==================== */
 
-        clientes[idx].participantes = document
-          .getElementById('jornadaParticipantes')
-          .value.trim();
-        clientes[idx].segmento =
-          document.getElementById('jornadaSegmento').value;
-        clientes[idx].porte = document.getElementById('jornadaPorte').value;
-        clientes[idx].funcionalidade = document.getElementById(
-          'jornadaFuncionalidade'
-        ).value;
-        clientes[idx].volume = document.getElementById('jornadaVolume').value;
-        clientes[idx].infoTemNaBase = document
-          .getElementById('jornadaInfoTemNaBase')
-          .value.trim();
-        clientes[idx].infoQuerTer = document
-          .getElementById('jornadaInfoQuerTer')
-          .value.trim();
-        clientes[idx].duvidas = document
-          .getElementById('jornadaDuvidas')
-          .value.trim();
-        clientes[idx].produtosApresentados =
-          obterValoresDynamic('.input-produto');
-        clientes[idx].engajamento =
-          document.getElementById('jornadaEngajamento').value;
-        clientes[idx].statusFinal =
-          document.getElementById('jornadaStatusFinal').value;
-        clientes[idx].anotacoesFinais = document
-          .getElementById('jornadaAnotacoesFinais')
-          .value.trim();
-
-        salvarDadosNoStorage();
+      function mudarSubGuia(event, id) {
+        document.querySelectorAll('.sub-tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.sub-tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
       }
 
-      function finalizarJornada() {
-        salvarProgressoJornada();
-        if (clienteAtualId) {
-          const idx = clientes.findIndex((c) => c.id === clienteAtualId);
-          if (idx !== -1) {
-            clientes[idx].status = 'Concluído';
-            salvarDadosNoStorage();
+      /* ==================== RENDERIZAR ITENS ==================== */
+
+      function renderizarItens() {
+        ['passo', 'dica', 'produto'].forEach(cat => {
+          const container = document.getElementById('lista' + capitalizar(cat));
+          if (!container) return;
+          container.innerHTML = '';
+
+          if (itens[cat].length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum item cadastrado ainda. Clique em "+ Adicionar" para começar.</div>';
+            return;
           }
-        }
-        voltarDashboard();
-      }
 
-      function editarTreinamentoAtual() {
-        if (!clienteAtualId) return;
-        const cliente = clientes.find((c) => c.id === clienteAtualId);
-        if (!cliente) return;
-
-        document.getElementById('tituloFormPreCadastro').innerText =
-          'Editar Pré-Cadastro do Treinamento';
-        document.getElementById('preNomeEmpresa').value = cliente.nome || '';
-        document.getElementById('preQuemAgendou').value =
-          cliente.quemAgendou || '';
-        document.getElementById('preDataTreinamento').value =
-          cliente.dataTreinamento || '';
-        document.getElementById('preTipoPagamento').value =
-          cliente.tipoPagamento || 'Pré-pago';
-        document.getElementById('preRealizouConsulta').value =
-          cliente.realizouConsulta || 'Não';
-        togglePlataformaAnterior();
-        document.getElementById('prePlataformaAnterior').value =
-          cliente.plataformaAnterior !== 'Não utiliza/utilizou'
-            ? cliente.plataformaAnterior
-            : '';
-        document.getElementById('preCadastrouUsuario').value =
-          cliente.cadastrouUsuario || 'Não';
-
-        // Kolmeya
-        document.getElementById('prePotencialKolmeya').checked =
-          !!cliente.potencialKolmeya;
-        sincronizarKolmeya();
-
-        // Destaques
-        const container = document.getElementById('listaDestaquesContainer');
-        container.innerHTML = '';
-        if (cliente.destaques && cliente.destaques.length > 0) {
-          cliente.destaques.forEach((d) => adicionarCampoDestaque(d));
-        } else {
-          adicionarCampoDestaque('');
-        }
-
-        document.getElementById('preObservacoes').value =
-          cliente.observacoes || '';
-
-        alternarTela('viewPreCadastro');
-      }
-
-      function excluirTreinamentoAtual() {
-        if (!clienteAtualId) return;
-        if (confirm('Tem certeza de que deseja excluir este treinamento?')) {
-          clientes = clientes.filter((c) => c.id !== clienteAtualId);
-          salvarDadosNoStorage();
-          voltarDashboard();
-        }
-      }
-
-      /* --- COPIAR PARA CLIPBOARD - VERSÃO PROFISSIONAL SEM EMOJIS --- */
-      function copiarInformacoesClipboard() {
-        if (!clienteAtualId) return;
-        const cliente = clientes.find((c) => c.id === clienteAtualId);
-        if (!cliente) return;
-
-        salvarProgressoJornada();
-
-        const dataFmt = cliente.dataTreinamento
-          ? cliente.dataTreinamento.split('-').reverse().join('/')
-          : 'Não informada';
-        const destaquesTexto =
-          cliente.destaques && cliente.destaques.length > 0
-            ? cliente.destaques.map((d) => `  - ${d}`).join('\n')
-            : '  Nenhum registrado';
-        const produtosTexto =
-          cliente.produtosApresentados &&
-          cliente.produtosApresentados.length > 0
-            ? cliente.produtosApresentados.map((p) => `  - ${p}`).join('\n')
-            : '  Nenhum registrado';
-
-        const textoRelatorio = `
-RELATÓRIO DE TREINAMENTO - JORNADA DO CLIENTE
-
-EMPRESA: ${cliente.nome} ${cliente.potencialKolmeya ? '[POTENCIAL KOLMEYA]' : ''}
-AGENDADO POR: ${cliente.quemAgendou || '-'}
-DATA DO TREINAMENTO: ${dataFmt}
-TIPO DE PLANO: ${cliente.tipoPagamento || 'Não informado'}
-PARTICIPANTES: ${cliente.participantes || 'Não informados'}
-
---------------------------------------------------
-1. INFORMAÇÕES DE PRÉ-CADASTRO
---------------------------------------------------
-Já usa/usou plataforma de dados? ${
-          cliente.realizouConsulta === 'Sim'
-            ? `Sim (${cliente.plataformaAnterior})`
-            : 'Não'
-        }
-Cadastrou usuário? ${cliente.cadastrouUsuario || 'Não'}
-Observações Prévias: ${cliente.observacoes || 'Nenhuma'}
-
-Destaques Mapeados:
-${destaquesTexto}
-
---------------------------------------------------
-2. MAPEAMENTO DE PERFIL
---------------------------------------------------
-Segmento de Mercado: ${cliente.segmento || 'Não informado'}
-Porte da Empresa: ${cliente.porte || 'Não informado'}
-Funcionalidade Prioritária: ${cliente.funcionalidade || 'Não informada'}
-Volume Estimado de Uso: ${cliente.volume || 'Não informado'}
-Informações que POSSUI na base: ${cliente.infoTemNaBase || 'Não informado'}
-Informações que DESEJA ENRIQUECER: ${cliente.infoQuerTer || 'Não informado'}
-Dúvidas e Dificuldades: ${cliente.duvidas || 'Nenhuma'}
-
---------------------------------------------------
-3. FECHAMENTO E PRODUTOS APRESENTADOS
---------------------------------------------------
-Produtos e Módulos Apresentados:
-${produtosTexto}
-
-Nível de Engajamento: ${cliente.engajamento || 'Não informado'}
-Status Final do Treinamento: ${cliente.statusFinal || 'Concluído'}
-Anotações Finais do CS: ${
-          cliente.anotacoesFinais || 'Sem anotações finais'
-        }
-        `.trim();
-
-        navigator.clipboard
-          .writeText(textoRelatorio)
-          .then(() => {
-            const toast = document.getElementById('toastNotification');
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-              toast.classList.add('hidden');
-            }, 3000);
-          })
-          .catch((err) => {
-            console.error('Erro ao copiar para a área de transferência:', err);
+          itens[cat].forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'item-card';
+            div.setAttribute('data-id', item.id);
+            div.setAttribute('data-cat', cat);
+            div.onclick = (e) => {
+              if (e.target.closest('.item-card-actions')) return;
+              abrirModalView(cat, item.id);
+            };
+            div.innerHTML = `
+              <div class="item-card-header">
+                <div class="item-card-title">${escapeHtml(item.titulo)}</div>
+                <div class="item-card-actions">
+                  <button class="btn-icon" onclick="event.stopPropagation(); copiarItem('${cat}', '${item.id}')" title="Copiar texto">Copiar</button>
+                  <button class="btn-icon" onclick="event.stopPropagation(); editarItem('${cat}', '${item.id}')" title="Editar">Editar</button>
+                  <button class="btn-icon danger" onclick="event.stopPropagation(); excluirItem('${cat}', '${item.id}')" title="Excluir">Excluir</button>
+                </div>
+              </div>
+              <div class="item-card-body">${stripHtmlToPreview(item.corpoHtml)}</div>
+              <span class="item-card-category">${labelCategoria(cat)}</span>
+            `;
+            container.appendChild(div);
           });
+        });
       }
 
-      /* INICIALIZAÇÃO DA PÁGINA */
+      function capitalizar(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+      function labelCategoria(cat) {
+        return { passo: 'Passo a Passo', dica: 'Dica', produto: 'Produto' }[cat] || cat;
+      }
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+      }
+      function stripHtmlToPreview(html) {
+        if (!html) return '';
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return escapeHtml(tmp.innerText.slice(0, 300));
+      }
+
+      /* ==================== MODAL DE VISUALIZAÇÃO ==================== */
+
+      function abrirModalView(categoria, id) {
+        const item = itens[categoria].find(i => i.id === id);
+        if (!item) return;
+        itemViewAtual = { categoria, id };
+
+        document.getElementById('viewCategoriaLabel').innerText =
+          'Visualizar ' + labelCategoria(categoria);
+        document.getElementById('viewTitulo').innerText = item.titulo || 'Sem título';
+        document.getElementById('viewCategoriaPill').innerText = labelCategoria(categoria);
+
+        const viewBody = document.getElementById('viewCorpo');
+        viewBody.innerHTML = item.corpoHtml || '<span style="color:#9499a6;">Sem conteúdo.</span>';
+
+        document.getElementById('modalView').classList.remove('hidden');
+      }
+
+      function fecharModalView() {
+        document.getElementById('modalView').classList.add('hidden');
+        itemViewAtual = null;
+      }
+
+      function copiarItemDoModalView() {
+        if (!itemViewAtual) return;
+        copiarItem(itemViewAtual.categoria, itemViewAtual.id);
+      }
+
+      /* ==================== MODAL DE ITEM (EDIÇÃO) ==================== */
+
+      function abrirModalItem(categoria) {
+        itemEditandoId = null;
+        itemEditandoCategoria = null;
+        document.getElementById('modalItemTitulo').innerText = 'Adicionar ' + labelCategoria(categoria);
+        document.getElementById('itemTitulo').value = '';
+        document.getElementById('editorContent').innerHTML = '';
+        document.getElementById('itemCategoria').value = categoria;
+        atualizarPreviewItem();
+        document.getElementById('modalItem').classList.remove('hidden');
+        setTimeout(() => document.getElementById('itemTitulo').focus(), 100);
+      }
+
+      function editarItem(categoria, id) {
+        const item = itens[categoria].find(i => i.id === id);
+        if (!item) return;
+        itemEditandoId = id;
+        itemEditandoCategoria = categoria;
+        document.getElementById('modalItemTitulo').innerText = 'Editar Item';
+        document.getElementById('itemTitulo').value = item.titulo || '';
+        document.getElementById('editorContent').innerHTML = item.corpoHtml || '';
+        document.getElementById('itemCategoria').value = categoria;
+        atualizarPreviewItem();
+        document.getElementById('modalItem').classList.remove('hidden');
+      }
+
+      function fecharModalItem() {
+        document.getElementById('modalItem').classList.add('hidden');
+        itemEditandoId = null;
+        itemEditandoCategoria = null;
+        if (editorExpandido) toggleExpandirEditor();
+      }
+
+      function salvarItem() {
+        const titulo = document.getElementById('itemTitulo').value.trim();
+        const categoria = document.getElementById('itemCategoria').value;
+        const corpoHtml = document.getElementById('editorContent').innerHTML.trim();
+        const corpoTexto = document.getElementById('editorContent').innerText.trim();
+
+        if (!titulo) { alert('Por favor, informe um título.'); return; }
+        if (!corpoTexto) { alert('Por favor, escreva o corpo do texto.'); return; }
+
+        if (itemEditandoId) {
+          const catAntiga = itemEditandoCategoria;
+          const item = itens[catAntiga].find(i => i.id === itemEditandoId);
+          if (item) {
+            if (catAntiga !== categoria) {
+              itens[catAntiga] = itens[catAntiga].filter(i => i.id !== itemEditandoId);
+              itens[categoria].push({
+                id: itemEditandoId, titulo, corpoHtml, corpo: corpoTexto,
+                criadoEm: item.criadoEm || Date.now(),
+              });
+            } else {
+              item.titulo = titulo; item.corpoHtml = corpoHtml; item.corpo = corpoTexto;
+            }
+          }
+        } else {
+          itens[categoria].push({
+            id: Date.now().toString() + Math.random().toString(36).slice(2, 7),
+            titulo, corpoHtml, corpo: corpoTexto, criadoEm: Date.now(),
+          });
+        }
+
+        salvarItensNoStorage();
+        if (buscaAtiva) aplicarBusca(); else renderizarItens();
+        fecharModalItem();
+      }
+
+      function excluirItem(categoria, id) {
+        if (!confirm('Deseja realmente excluir este item?')) return;
+        itens[categoria] = itens[categoria].filter(i => i.id !== id);
+        salvarItensNoStorage();
+        if (buscaAtiva) aplicarBusca(); else renderizarItens();
+      }
+
+      /* ==================== CONVERSÃO HTML → WHATSAPP ==================== */
+
+      function htmlParaWhatsApp(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+
+        function processar(node) {
+          let texto = '';
+          Array.from(node.childNodes).forEach(child => {
+            if (child.nodeType === Node.TEXT_NODE) {
+              texto += child.textContent;
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+              const tag = child.tagName.toLowerCase();
+              let conteudo = processar(child);
+
+              if (tag === 'b' || tag === 'strong') {
+                texto += '*' + conteudo + '*';
+              } else if (tag === 'i' || tag === 'em') {
+                texto += '_' + conteudo + '_';
+              } else if (tag === 's' || tag === 'strike' || tag === 'del') {
+                texto += '~' + conteudo + '~';
+              } else if (tag === 'code') {
+                texto += '```' + conteudo + '```';
+              } else if (tag === 'br') {
+                texto += '\n';
+              } else if (tag === 'blockquote') {
+                const linhas = conteudo.split('\n').filter(l => l.trim() !== '');
+                texto += linhas.map(l => '> ' + l.trim()).join('\n');
+              } else if (tag === 'ol') {
+                let n = 1;
+                const itensLi = child.querySelectorAll(':scope > li');
+                itensLi.forEach((li, i) => {
+                  const textoLi = processar(li).trim();
+                  texto += (i > 0 ? '\n' : '') + n + '. ' + textoLi;
+                  n++;
+                });
+              } else if (tag === 'ul') {
+                const itensLi = child.querySelectorAll(':scope > li');
+                itensLi.forEach((li, i) => {
+                  const textoLi = processar(li).trim();
+                  texto += (i > 0 ? '\n' : '') + '• ' + textoLi;
+                });
+              } else if (tag === 'li') {
+                texto += conteudo;
+              } else if (tag === 'p' || tag === 'div' || /^h[1-6]$/.test(tag)) {
+                texto += conteudo;
+                if (!conteudo.endsWith('\n')) texto += '\n';
+              } else {
+                texto += conteudo;
+              }
+            }
+          });
+          return texto;
+        }
+
+        let resultado = processar(tmp);
+        resultado = resultado.replace(/\n{3,}/g, '\n\n');
+        resultado = resultado.replace(/^\n+/, '').replace(/\n+$/, '');
+        return resultado;
+      }
+
+      /* ==================== RENDERIZADOR WHATSAPP → HTML ==================== */
+
+      function whatsAppParaHTML(texto) {
+        let html = escapeHtml(texto);
+        html = html.replace(/```([\s\S]+?)```/g, '<code>$1</code>');
+        html = html.replace(/^&gt;\s?(.*)$/gm, '<div class="wa-quote">$1</div>');
+        html = html.replace(/\*([^\*\n]+)\*/g, '<b>$1</b>');
+        html = html.replace(/_([^_\n]+)_/g, '<i>$1</i>');
+        html = html.replace(/~([^~\n]+)~/g, '<s>$1</s>');
+        html = html.replace(/^(\d+)\.\s+(.*)$/gm, '<span class="wa-list-num">$1. $2</span>');
+        html = html.replace(/^[•\-\*]\s+(.*)$/gm, '<span class="wa-list-bullet">• $1</span>');
+        html = html.replace(/\n/g, '<br>');
+        return html;
+      }
+
+      /* ==================== PREVIEW DO ITEM ==================== */
+
+      function montarTextoItem(item) {
+        return `*${item.titulo}*\n${htmlParaWhatsApp(item.corpoHtml)}`;
+      }
+
+      function atualizarPreviewItem() {
+        const titulo = document.getElementById('itemTitulo').value.trim() || '[título]';
+        const corpoHtml = document.getElementById('editorContent').innerHTML;
+        const corpoWhats = htmlParaWhatsApp(corpoHtml) || '[corpo do texto]';
+        const textoCompleto = `*${titulo}*\n${corpoWhats}`;
+
+        const bubble = document.getElementById('waTextoItem');
+        bubble.innerHTML = whatsAppParaHTML(textoCompleto);
+
+        const agora = new Date();
+        document.getElementById('waHoraItem').innerText =
+          String(agora.getHours()).padStart(2, '0') + ':' + String(agora.getMinutes()).padStart(2, '0');
+
+        atualizarEstadoBotoesToggle();
+      }
+
+      /* ==================== COPIAR ITEM ==================== */
+
+      function copiarItem(categoria, id) {
+        const item = itens[categoria].find(i => i.id === id);
+        if (!item) return;
+        const texto = montarTextoItem(item);
+        navigator.clipboard.writeText(texto).then(() => {
+          const toast = document.getElementById('toastNotification');
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 2500);
+        });
+      }
+
+      /* ==================== HELPERS DE SELEÇÃO ==================== */
+
+      function getSelectionWithinEditor() {
+        const editor = document.getElementById('editorContent');
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return null;
+        const range = sel.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) return null;
+        return { sel, range, editor };
+      }
+
+      function encontrarAncestral(node, tagName) {
+        const editor = document.getElementById('editorContent');
+        let atual = node;
+        const alvo = tagName.toUpperCase();
+        while (atual && atual !== editor) {
+          if (atual.nodeType === 1 && atual.tagName === alvo) return atual;
+          atual = atual.parentNode;
+        }
+        return null;
+      }
+
+      function selecionarNode(node) {
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      /* ==================== TOGGLE CODE (</>) ==================== */
+
+      function toggleCode() {
+        const ctx = getSelectionWithinEditor();
+        if (!ctx) {
+          // Sem seleção no editor — não faz nada
+          return;
+        }
+        const { sel, range, editor } = ctx;
+
+        // Caso 1: está dentro de um <code> — remover (unwrap)
+        const codeAncestral = encontrarAncestral(range.commonAncestorContainer, 'code');
+        if (codeAncestral) {
+          removerCode(codeAncestral, editor);
+          atualizarPreviewItem();
+          return;
+        }
+
+        // Caso 2: seleção vazia (só cursor) — nada para envolver
+        if (sel.isCollapsed) {
+          // Insere um <code> vazio e coloca o cursor dentro
+          const code = document.createElement('code');
+          code.appendChild(document.createTextNode('\u200b')); // zero-width space para ter conteúdo
+          range.insertNode(code);
+          // Coloca o cursor após o zero-width space
+          const newRange = document.createRange();
+          newRange.setStart(code.firstChild, 1);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+          atualizarPreviewItem();
+          return;
+        }
+
+        // Caso 3: tem seleção de texto — envolver em <code>
+        const texto = range.toString();
+        if (!texto) return;
+
+        // Se a seleção cruza vários blocos, pega apenas o texto e substitui
+        const code = document.createElement('code');
+        code.appendChild(document.createTextNode(texto));
+        try {
+          range.deleteContents();
+          range.insertNode(code);
+        } catch (e) {
+          // Fallback: se não der para envolver, insere no início
+          editor.appendChild(code);
+        }
+        atualizarPreviewItem();
+      }
+
+      function removerCode(codeEl, editor) {
+        const parent = codeEl.parentNode;
+        if (!parent) return;
+        while (codeEl.firstChild) {
+          parent.insertBefore(codeEl.firstChild, codeEl);
+        }
+        parent.removeChild(codeEl);
+        parent.normalize();
+      }
+
+      /* ==================== TOGGLE BLOCKQUOTE (") ==================== */
+
+      function toggleBlockquote() {
+        const ctx = getSelectionWithinEditor();
+        if (!ctx) return;
+        const { range, editor } = ctx;
+
+        // Verifica se o cursor/selection está dentro de um blockquote
+        const bqAncestral = encontrarAncestral(range.commonAncestorContainer, 'blockquote');
+
+        if (bqAncestral) {
+          removerBlockquote(bqAncestral, editor);
+          atualizarPreviewItem();
+          return;
+        }
+
+        // Aplicar: envolve o(s) bloco(s) atual(is) em blockquote
+        aplicarBlockquote(range, editor);
+        atualizarPreviewItem();
+      }
+
+      function aplicarBlockquote(range, editor) {
+        // Pega o bloco de linha atual (o elemento pai imediato dentro do editor)
+        let bloco = range.startContainer;
+        // Sobe até achar um filho direto do editor ou o próprio editor
+        while (bloco && bloco.parentNode !== editor && bloco !== editor) {
+          bloco = bloco.parentNode;
+        }
+        if (!bloco || bloco === editor) {
+          // Cursor solto no editor — envolve o conteúdo todo do editor
+          const conteudo = editor.innerHTML;
+          if (!conteudo.trim()) {
+            // Cria um blockquote vazio
+            const bq = document.createElement('blockquote');
+            bq.appendChild(document.createElement('br'));
+            editor.appendChild(bq);
+            return;
+          }
+          return;
+        }
+
+        // Se o bloco já é um blockquote (checado antes), não aplica
+        if (bloco.tagName === 'BLOCKQUOTE') return;
+
+        // Envolve o bloco em um blockquote
+        const bq = document.createElement('blockquote');
+        bloco.parentNode.insertBefore(bq, bloco);
+        bq.appendChild(bloco);
+      }
+
+      function removerBlockquote(bqEl, editor) {
+        const parent = bqEl.parentNode;
+        if (!parent) return;
+
+        // Substitui o blockquote pelos seus filhos (unwrap)
+        // Se houver linhas (divs/p) internas, mantém como parágrafos
+        const filhos = Array.from(bqEl.childNodes);
+        filhos.forEach(filho => {
+          parent.insertBefore(filho, bqEl);
+        });
+        parent.removeChild(bqEl);
+        parent.normalize();
+      }
+
+      /* ==================== ESTADO DOS BOTÕES TOGGLE ==================== */
+
+      function atualizarEstadoBotoesToggle() {
+        const ctx = getSelectionWithinEditor();
+        const btnCode = document.querySelector('.toolbar-btn[data-cmd="code"]');
+        const btnQuote = document.querySelector('.toolbar-btn[data-cmd="blockquote"]');
+        if (!btnCode || !btnQuote) return;
+        if (!ctx) {
+          btnCode.classList.remove('is-active');
+          btnQuote.classList.remove('is-active');
+          return;
+        }
+        const { range } = ctx;
+        const inCode = !!encontrarAncestral(range.commonAncestorContainer, 'code');
+        const inQuote = !!encontrarAncestral(range.commonAncestorContainer, 'blockquote');
+        btnCode.classList.toggle('is-active', inCode);
+        btnQuote.classList.toggle('is-active', inQuote);
+      }
+
+      /* ==================== EDITOR RICO ==================== */
+
+      function initEditor() {
+        const editor = document.getElementById('editorContent');
+        const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+
+        toolbarBtns.forEach(btn => {
+          btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const cmd = btn.dataset.cmd;
+
+            if (cmd === 'code') {
+              toggleCode();
+            } else if (cmd === 'blockquote') {
+              toggleBlockquote();
+            } else if (cmd === 'undo') {
+              document.execCommand('undo', false, null);
+              atualizarPreviewItem();
+            } else if (cmd === 'redo') {
+              document.execCommand('redo', false, null);
+              atualizarPreviewItem();
+            } else {
+              editor.focus();
+              document.execCommand(cmd, false, null);
+              atualizarPreviewItem();
+            }
+            editor.focus();
+            atualizarEstadoBotoesToggle();
+          });
+        });
+
+        editor.addEventListener('input', atualizarPreviewItem);
+        editor.addEventListener('keyup', () => {
+          atualizarPreviewItem();
+          atualizarEstadoBotoesToggle();
+        });
+        editor.addEventListener('mouseup', () => {
+          tratarSelecao();
+          atualizarEstadoBotoesToggle();
+        });
+        editor.addEventListener('keyup', (e) => {
+          if (e.shiftKey || e.ctrlKey || e.metaKey) {
+            tratarSelecao();
+            atualizarEstadoBotoesToggle();
+          }
+        });
+
+        editor.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const texto = (e.clipboardData || window.clipboardData).getData('text/plain');
+          document.execCommand('insertText', false, texto);
+        });
+
+        // Enter dentro de <code> sai do code (quebra fora)
+        editor.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            const ctx = getSelectionWithinEditor();
+            if (ctx) {
+              const { range, editor } = ctx;
+              const inCode = encontrarAncestral(range.commonAncestorContainer, 'code');
+              const inQuote = encontrarAncestral(range.commonAncestorContainer, 'blockquote');
+
+              if (inCode) {
+                // Sai do code: insere um <br> depois do code e move o cursor pra lá
+                e.preventDefault();
+                const br = document.createElement('br');
+                const codeEl = inCode;
+                codeEl.parentNode.insertBefore(br, codeEl.nextSibling);
+                // Insere também um <br> caso o próximo não exista (para ter linha em branco)
+                const newRange = document.createRange();
+                newRange.setStartAfter(br);
+                newRange.collapse(true);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                // Força quebra de linha
+                document.execCommand('insertHTML', false, '<br>');
+                atualizarPreviewItem();
+                return;
+              }
+
+              if (inQuote) {
+                // Sai do blockquote: cria um novo bloco fora dele
+                e.preventDefault();
+                const bq = inQuote;
+                const novaDiv = document.createElement('div');
+                novaDiv.appendChild(document.createElement('br'));
+                bq.parentNode.insertBefore(novaDiv, bq.nextSibling);
+                const newRange = document.createRange();
+                newRange.setStart(novaDiv, 0);
+                newRange.collapse(true);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                atualizarPreviewItem();
+                return;
+              }
+            }
+          }
+
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) {
+              document.execCommand('redo', false, null);
+            } else {
+              document.execCommand('undo', false, null);
+            }
+            setTimeout(atualizarPreviewItem, 0);
+          } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            e.preventDefault();
+            document.execCommand('redo', false, null);
+            setTimeout(atualizarPreviewItem, 0);
+          }
+        });
+
+        initResizeHandle();
+      }
+
+      /* ==================== MENU FLUTUANTE ==================== */
+
+      function tratarSelecao() {
+        const editor = document.getElementById('editorContent');
+        const sel = window.getSelection();
+        removerMenuFlutuante();
+
+        if (!sel.rangeCount || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) return;
+        if (sel.toString().trim().length === 0) return;
+
+        const rect = range.getBoundingClientRect();
+        const editorRect = editor.getBoundingClientRect();
+
+        const inCode = !!encontrarAncestral(range.commonAncestorContainer, 'code');
+        const inQuote = !!encontrarAncestral(range.commonAncestorContainer, 'blockquote');
+
+        const menu = document.createElement('div');
+        menu.className = 'floating-menu';
+        menu.id = 'floatingMenu';
+        menu.innerHTML = `
+          <button class="floating-btn" data-cmd="bold" title="Negrito"><b>B</b></button>
+          <button class="floating-btn" data-cmd="italic" title="Itálico"><i>I</i></button>
+          <button class="floating-btn" data-cmd="strikeThrough" title="Tachado"><s>S</s></button>
+          <button class="floating-btn ${inCode ? 'is-active' : ''}" data-cmd="code" title="Monoespaçado">&lt;/&gt;</button>
+          <button class="floating-btn" data-cmd="insertOrderedList" title="Lista Numerada">1.</button>
+          <button class="floating-btn" data-cmd="insertUnorderedList" title="Lista Marcadores">•</button>
+          <button class="floating-btn ${inQuote ? 'is-active' : ''}" data-cmd="blockquote" title="Citação">❝</button>
+        `;
+
+        const top = rect.top - editorRect.top + editor.scrollTop - 50;
+        const left = rect.left - editorRect.left + (rect.width / 2) - 140;
+        menu.style.top = Math.max(0, top) + 'px';
+        menu.style.left = Math.max(0, left) + 'px';
+
+        editor.parentElement.appendChild(menu);
+
+        menu.querySelectorAll('.floating-btn').forEach(btn => {
+          btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const cmd = btn.dataset.cmd;
+            if (cmd === 'code') toggleCode();
+            else if (cmd === 'blockquote') toggleBlockquote();
+            else {
+              document.getElementById('editorContent').focus();
+              document.execCommand(cmd, false, null);
+            }
+            removerMenuFlutuante();
+            atualizarPreviewItem();
+            atualizarEstadoBotoesToggle();
+          });
+        });
+      }
+
+      function removerMenuFlutuante() {
+        const m = document.getElementById('floatingMenu');
+        if (m) m.remove();
+      }
+
+      document.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('.floating-menu')) removerMenuFlutuante();
+      });
+
+      /* ==================== EXPANDIR EDITOR ==================== */
+
+      function toggleExpandirEditor() {
+        editorExpandido = !editorExpandido;
+        const container = document.getElementById('modalItemContainer');
+        const btn = document.getElementById('btnExpandir');
+        const editorContent = document.getElementById('editorContent');
+
+        if (editorExpandido) {
+          container.classList.add('expanded');
+          btn.innerText = '⛶ Recolher';
+          editorContent.style.minHeight = '500px';
+          editorContent.style.maxHeight = '70vh';
+        } else {
+          container.classList.remove('expanded');
+          btn.innerText = '⛶ Expandir';
+          editorContent.style.minHeight = '260px';
+          editorContent.style.maxHeight = '500px';
+        }
+      }
+
+      /* ==================== RESIZE HANDLE ==================== */
+
+      function initResizeHandle() {
+        const handle = document.getElementById('editorResizeHandle');
+        const editorContent = document.getElementById('editorContent');
+        let isResizing = false;
+        let startY = 0;
+        let startHeight = 0;
+
+        handle.addEventListener('mousedown', (e) => {
+          isResizing = true;
+          startY = e.clientY;
+          startHeight = editorContent.offsetHeight;
+          document.body.style.userSelect = 'none';
+          document.body.style.cursor = 'ns-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isResizing) return;
+          const delta = e.clientY - startY;
+          const novaLargura = Math.max(180, startHeight + delta);
+          editorContent.style.height = novaLargura + 'px';
+          editorContent.style.minHeight = novaLargura + 'px';
+          editorContent.style.maxHeight = 'none';
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (isResizing) {
+            isResizing = false;
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+          }
+        });
+      }
+
+      /* ==================== MODAL REGISTRO TREINAMENTO ==================== */
+
+      function abrirModalRegistro() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        document.getElementById('regData').value = `${ano}-${mes}-${dia}`;
+        const h = String(hoje.getHours()).padStart(2, '0');
+        const m = String(hoje.getMinutes()).padStart(2, '0');
+        document.getElementById('regHora').value = `${h}:${m}`;
+        document.getElementById('regNomes').value = '';
+        document.getElementById('regNecessidade').value = '';
+        carregarProdutosNoSelect();
+        produtosSelecionadosModal = [];
+        renderizarProdutosSelecionados();
+        document.getElementById('novoProdutoBox').style.display = 'none';
+        document.getElementById('regNovoProduto').value = '';
+        atualizarPreviewRegistro();
+        document.getElementById('modalRegistro').classList.remove('hidden');
+      }
+
+      function fecharModalRegistro() {
+        document.getElementById('modalRegistro').classList.add('hidden');
+        document.getElementById('regHora').value = '';
+        document.getElementById('regNomes').value = '';
+        document.getElementById('regNecessidade').value = '';
+        document.getElementById('regProdutoSelect').value = '';
+        produtosSelecionadosModal = [];
+        renderizarProdutosSelecionados();
+        document.getElementById('novoProdutoBox').style.display = 'none';
+        document.getElementById('regNovoProduto').value = '';
+      }
+
+      function carregarProdutosNoSelect() {
+        const select = document.getElementById('regProdutoSelect');
+        select.innerHTML = '<option value="">Selecione um produto...</option>';
+        produtosCadastrados.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p; opt.textContent = p;
+          select.appendChild(opt);
+        });
+      }
+
+      function mostrarNovoProduto() {
+        document.getElementById('novoProdutoBox').style.display = 'flex';
+        document.getElementById('regNovoProduto').focus();
+      }
+      function ocultarNovoProduto() {
+        document.getElementById('novoProdutoBox').style.display = 'none';
+        document.getElementById('regNovoProduto').value = '';
+      }
+
+      function cadastrarNovoProduto() {
+        const nome = document.getElementById('regNovoProduto').value.trim();
+        if (!nome) { alert('Digite o nome do produto.'); return; }
+        if (produtosCadastrados.includes(nome)) { alert('Produto já cadastrado.'); return; }
+        produtosCadastrados.push(nome);
+        salvarProdutosNoStorage();
+        carregarProdutosNoSelect();
+        ocultarNovoProduto();
+        if (!produtosSelecionadosModal.includes(nome)) {
+          produtosSelecionadosModal.push(nome);
+          renderizarProdutosSelecionados();
+          atualizarPreviewRegistro();
+        }
+      }
+
+      function adicionarProdutoSelecionado() {
+        const select = document.getElementById('regProdutoSelect');
+        const valor = select.value;
+        if (!valor) return;
+        if (!produtosSelecionadosModal.includes(valor)) {
+          produtosSelecionadosModal.push(valor);
+          renderizarProdutosSelecionados();
+        }
+        select.value = '';
+        atualizarPreviewRegistro();
+      }
+
+      function removerProdutoSelecionado(produto) {
+        produtosSelecionadosModal = produtosSelecionadosModal.filter(p => p !== produto);
+        renderizarProdutosSelecionados();
+        atualizarPreviewRegistro();
+      }
+
+      function renderizarProdutosSelecionados() {
+        const container = document.getElementById('produtosSelecionados');
+        container.innerHTML = '';
+        produtosSelecionadosModal.forEach(p => {
+          const pill = document.createElement('span');
+          pill.style.cssText = 'background:#f3f0ff; color:#6226ef; border:1px solid #e2d9ff; padding:5px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer;';
+          pill.innerHTML = `${escapeHtml(p)} <span style="margin-left:6px; font-weight:bold; color:#ef4444;">×</span>`;
+          pill.onclick = () => removerProdutoSelecionado(p);
+          container.appendChild(pill);
+        });
+      }
+
+      function atualizarPreviewRegistro() {
+        const dataInput = document.getElementById('regData').value;
+        const hora = document.getElementById('regHora').value;
+        const nomes = document.getElementById('regNomes').value.trim();
+        const necessidade = document.getElementById('regNecessidade').value.trim();
+        let dataFormatada = '[data]';
+        if (dataInput) {
+          const p = dataInput.split('-');
+          dataFormatada = `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        const horaFormatada = hora || '[hora]';
+        const nomesFormatado = nomes || '[nomes]';
+        const necessidadeFormatada = necessidade || '[descrever necessidade]';
+        const produtosFormatado = produtosSelecionadosModal.length > 0
+          ? produtosSelecionadosModal.join(', ')
+          : '[produtos]';
+
+        const texto = `O treinamento foi realizado via Teams no dia ${dataFormatada}, às ${horaFormatada}, com participação de ${nomesFormatado}. A necessidade abordagem durante o treinamento foi ${necessidadeFormatada}. Foi demonstrado o produto ${produtosFormatado} e explicado sobre o processo de enriquecimento, consultas individuais e gerenciar. O link para avaliação de satisfação (CSAT) foi enviado após a reunião`;
+
+        document.getElementById('previewRegistro').innerText = texto;
+      }
+
+      function copiarTextoRegistro() {
+        const texto = document.getElementById('previewRegistro').innerText;
+        navigator.clipboard.writeText(texto).then(() => {
+          const toast = document.getElementById('toastNotification');
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 2500);
+        });
+      }
+
+      /* ==================== INICIALIZAÇÃO ==================== */
+
       window.addEventListener('DOMContentLoaded', () => {
         carregarDadosDoStorage();
-        renderizarTabela();
+        renderizarItens();
+        initEditor();
+
+        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.sub-tab-content').forEach(c => c.classList.remove('active'));
+        const btnProdutos = document.querySelector('.sub-tab-btn[onclick*="guiaProdutos"]');
+        if (btnProdutos) btnProdutos.classList.add('active');
+        document.getElementById('guiaProdutos').classList.add('active');
+
+        document.getElementById('regProdutoSelect').addEventListener('change', function () {
+          if (this.value) adicionarProdutoSelecionado();
+        });
+
+        document.getElementById('regNovoProduto').addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); cadastrarNovoProduto(); }
+        });
+
+        document.getElementById('itemTitulo').addEventListener('input', atualizarPreviewItem);
+        document.getElementById('editorContent').addEventListener('input', atualizarPreviewItem);
+        document.getElementById('editorContent').addEventListener('keyup', atualizarPreviewItem);
+
+        // Atualiza estado dos botões quando o cursor muda
+        document.addEventListener('selectionchange', () => {
+          if (document.getElementById('modalItem').classList.contains('hidden')) return;
+          atualizarEstadoBotoesToggle();
+        });
       });
     </script>
     <script src="sidebar.js"></script>
