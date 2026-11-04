@@ -3,6 +3,87 @@ let todasSolicitacoes = [];
 let solicitacaoAtual = null;
 let usuarioLogado = '';
 
+// ---- Estado da nova experiência (somente interface) ----
+let visaoAtual = 'kanban';
+let filaAlertas = [];
+let alertaAberto = false;
+let timerAlertas = null;
+let ultimoDiaAlertaCancelamento = '';
+let itemArrastadoId = null;
+
+// ============================================================
+// CONFIGURAÇÃO DAS COLUNAS / STATUS
+// "valor" é o que fica gravado no banco (não muda).
+// "label" é só o texto exibido na tela.
+// Concluída movida para a última posição.
+// ============================================================
+const STATUS_CONFIG = [
+  {
+    valor: 'Pendente',
+    label: 'Aguardando retorno e-mail',
+    classe: 'status-pendente',
+    tom: '',
+    cor: '#6b7280',
+  },
+  {
+    valor: 'Em Andamento',
+    label: 'Em Andamento',
+    classe: 'status-andamento',
+    tom: '',
+    cor: '#059669',
+  },
+  {
+    valor: 'Análise Interna',
+    label: 'Análise Interna',
+    classe: 'status-analise',
+    tom: '',
+    cor: '#2563eb',
+  },
+  {
+    valor: 'Sem Retorno 1° Dia',
+    label: 'Sem Retorno 1° Dia',
+    classe: 'status-semretorno1',
+    tom: 'semretorno1',
+    cor: '#f59e0b',
+  },
+  {
+    valor: 'Sem Retorno 2° Dia',
+    label: 'Sem Retorno 2° Dia',
+    classe: 'status-semretorno2',
+    tom: 'semretorno2',
+    cor: '#ea580c',
+  },
+  {
+    valor: 'Atenção',
+    label: 'Sem Retorno 3° Dia',
+    classe: 'status-atencao',
+    tom: 'atencao',
+    cor: '#dc2626',
+  },
+  {
+    valor: 'Concluída',
+    label: 'Concluídas',
+    classe: 'status-concluido',
+    tom: '',
+    cor: '#9ca3af',
+  },
+];
+
+const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+const ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+const ICON_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+
+function getStatusConfig(status) {
+  return (
+    STATUS_CONFIG.find((c) => c.valor === status) ||
+    STATUS_CONFIG[0] /* desconhecido/vazio = Aguardando retorno e-mail */
+  );
+}
+
+function getStatusLabel(status) {
+  return getStatusConfig(status).label.replace(/^Concluídas$/, 'Concluída');
+}
+
 // ============================================================
 // INICIALIZAÇÃO
 // ============================================================
@@ -39,8 +120,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     gerarProtocolo();
     await carregarSolicitacoes();
 
-    // Verifica alertas imediatamente após carregar
-    verificarAlertas();
+    // Alertas ao abrir a página + repetição a cada hora
+    verificarTodosAlertas(true);
+    iniciarAlertaPorHora();
   } catch (err) {
     console.error('Erro na inicialização:', err);
     mostrarToast('Erro ao inicializar: ' + err.message, 'error');
@@ -66,14 +148,13 @@ function configurarEventListeners() {
       abrirModalFormulario();
     });
 
-  document.getElementById('btnFabNova').addEventListener('click', () => {
-    gerarProtocolo();
-    abrirModalFormulario();
-  });
-
   document
     .getElementById('solicitacaoForm')
     .addEventListener('submit', salvarSolicitacao);
+
+  document
+    .getElementById('tipoSolicitacao')
+    .addEventListener('change', atualizarCampoEfetivacao);
 
   document
     .getElementById('filterStatus')
@@ -132,7 +213,7 @@ async function carregarSolicitacoes() {
     });
 
     classificarStatus(todasSolicitacoes);
-    renderizarSolicitacoes(todasSolicitacoes);
+    aplicarFiltros(); // mantém os filtros ativos após recarregar
     atualizarStats(todasSolicitacoes);
   } catch (err) {
     console.error('Erro ao carregar:', err);
@@ -189,6 +270,16 @@ async function salvarSolicitacao(e) {
       user_id: user.id,
       andamentos: [],
     };
+
+    // NOVO: data de efetivação (somente quando for Cancelamento)
+    if (dados.tipo_solicitacao === 'Cancelamento') {
+      const dataEfetivacao = document.getElementById('dataEfetivacao').value;
+      if (!dataEfetivacao) {
+        mostrarToast('Informe a data de efetivação do cancelamento!', 'error');
+        return;
+      }
+      dados.data_efetivacao = dataEfetivacao;
+    }
 
     if (!dados.nome_cliente || !dados.protocolo || !dados.tipo_solicitacao) {
       mostrarToast('Preencha todos os campos obrigatórios!', 'error');
@@ -335,106 +426,235 @@ async function excluirSolicitacao(id) {
 }
 
 // ============================================================
+// TROCA DE STATUS (card, seletor rápido e arrastar no kanban)
+// ============================================================
+async function atualizarStatus(id, novoStatus) {
+  try {
+    const item = todasSolicitacoes.find((s) => s.id === id);
+    if (!item) return;
+
+    if (item.status === novoStatus) {
+      aplicarFiltros();
+      return;
+    }
+
+    const statusAnterior = item.status;
+    const andamento = {
+      id: Date.now().toString(),
+      titulo: 'Status alterado',
+      resumo: `De "${getStatusLabel(statusAnterior)}" para "${getStatusLabel(
+        novoStatus
+      )}"`,
+      data: getDataHoraBrasilia().toISOString(),
+    };
+    const andamentos = [...(item.andamentos || []), andamento];
+
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+
+    const { error } = await supabaseClient
+      .from('solicitacoes')
+      .update({ status: novoStatus, andamentos: andamentos })
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    await carregarSolicitacoes();
+
+    // Se a regra automática reposicionou o card, avisa o motivo
+    const atualizado = todasSolicitacoes.find((s) => s.id === id);
+    if (atualizado && atualizado.status !== novoStatus) {
+      mostrarToast(
+        `Regra automática manteve o card em "${getStatusLabel(
+          atualizado.status
+        )}" pelo tempo sem retorno.`,
+        'info'
+      );
+    } else {
+      mostrarToast(`Status: ${getStatusLabel(novoStatus)}`, 'success');
+    }
+  } catch (err) {
+    console.error('Erro ao alterar status:', err);
+    mostrarToast('Erro ao alterar status', 'error');
+    aplicarFiltros();
+  }
+}
+
+function trocarStatusRapido(event, id) {
+  event.stopPropagation();
+  atualizarStatus(id, event.target.value);
+}
+
+// ---- Arrastar e soltar (kanban) ----
+function iniciarArraste(event, id) {
+  itemArrastadoId = id;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', id);
+  event.currentTarget.classList.add('dragging');
+}
+
+function finalizarArraste(event) {
+  event.currentTarget.classList.remove('dragging');
+  document
+    .querySelectorAll('.kanban-col.drag-over')
+    .forEach((c) => c.classList.remove('drag-over'));
+}
+
+function permitirSoltar(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  event.currentTarget.classList.add('drag-over');
+}
+
+function saiuDaColuna(event) {
+  const col = event.currentTarget;
+  if (!col.contains(event.relatedTarget)) col.classList.remove('drag-over');
+}
+
+function soltarNaColuna(event) {
+  event.preventDefault();
+  const col = event.currentTarget;
+  col.classList.remove('drag-over');
+  const id = event.dataTransfer.getData('text/plain') || itemArrastadoId;
+  itemArrastadoId = null;
+  if (id) atualizarStatus(id, col.dataset.status);
+}
+
+// ============================================================
 // RENDERIZAÇÃO
 // ============================================================
 function renderizarSolicitacoes(solicitacoes) {
-  const container = document.getElementById('solicitacoesContainer');
+  renderizarKanban(solicitacoes);
+  renderizarLista(solicitacoes);
+}
+
+function opcoesStatus(statusAtual) {
+  return STATUS_CONFIG.map(
+    (c) =>
+      `<option value="${c.valor}" ${
+        c.valor === statusAtual ? 'selected' : ''
+      }>${c.label === 'Concluídas' ? 'Concluída' : c.label}</option>`
+  ).join('');
+}
+
+function htmlSeletorStatus(item) {
+  const cfg = getStatusConfig(item.status);
+  return `<select class="status-select ${cfg.classe}" title="Alterar status"
+            onclick="event.stopPropagation();"
+            onchange="trocarStatusRapido(event, '${item.id}')">
+            ${opcoesStatus(cfg.valor)}
+          </select>`;
+}
+
+function htmlAcoes(item) {
+  const isConcluido = item.status === 'Concluída';
+  return `<div class="card-actions" onclick="event.stopPropagation();">
+      <button class="btn-icon ${isConcluido ? 'active-check' : ''}" title="${
+    isConcluido ? 'Reabrir' : 'Concluir'
+  }" onclick="toggleConcluido('${item.id}')">${ICON_CHECK}</button>
+      <button class="btn-icon" title="Editar" onclick="editarSolicitacao('${
+        item.id
+      }')">${ICON_EDIT}</button>
+      <button class="btn-icon" title="Excluir" onclick="excluirSolicitacao('${
+        item.id
+      }')">${ICON_TRASH}</button>
+    </div>`;
+}
+
+function renderizarKanban(solicitacoes) {
+  const board = document.getElementById('kanbanBoard');
+  const lista = solicitacoes || [];
+
+  board.innerHTML = STATUS_CONFIG.map((cfg) => {
+    const cards = lista.filter(
+      (s) => getStatusConfig(s.status).valor === cfg.valor
+    );
+
+    return `
+      <div class="kanban-col" data-status="${cfg.valor}"
+           ondragover="permitirSoltar(event)"
+           ondragleave="saiuDaColuna(event)"
+           ondrop="soltarNaColuna(event)">
+        <div class="kanban-col-header" style="--col-color:${cfg.cor}">
+          <span class="kanban-col-title">${cfg.label}</span>
+          <span class="kanban-count">${cards.length}</span>
+        </div>
+        <div class="kanban-col-body">
+          ${
+            cards.length
+              ? cards.map(htmlCardKanban).join('')
+              : '<div class="kanban-empty">Nenhum card</div>'
+          }
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CARD KANBAN SIMPLIFICADO
+// Exibe: Nome do cliente, Tipo, Data da solicitação e Status
+// ============================================================
+function htmlCardKanban(item) {
+  const cfg = getStatusConfig(item.status);
+  const isConcluido = item.status === 'Concluída';
+  const dataFormatada = item.data_pedido
+    ? formatarDataHora(item.data_pedido)
+    : '-';
+
+  return `
+    <div class="kcard ${cfg.tom ? 'tone-' + cfg.tom : ''} ${
+    isConcluido ? 'is-completed' : ''
+  }" draggable="true"
+         ondragstart="iniciarArraste(event, '${item.id}')"
+         ondragend="finalizarArraste(event)"
+         onclick="abrirModalDetalhes('${item.id}')">
+      <div class="kcard-title">${escapeHtml(item.nome_cliente)}</div>
+      <div class="kcard-sub">${escapeHtml(item.tipo_solicitacao || 'Sem tipo')}</div>
+      <div class="kcard-date">${dataFormatada}</div>
+      <div class="kcard-footer">
+        ${htmlSeletorStatus(item)}
+      </div>
+    </div>`;
+}
+
+function renderizarLista(solicitacoes) {
+  const tbody = document.getElementById('listaBody');
 
   if (!solicitacoes || solicitacoes.length === 0) {
-    container.innerHTML = `<div class="empty-state">Nenhuma solicitação encontrada.</div>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Nenhuma solicitação encontrada.</div></td></tr>`;
     return;
   }
 
-  container.innerHTML = solicitacoes
+  tbody.innerHTML = solicitacoes
     .map((item) => {
-      const dataFormatada = item.data_pedido
-        ? formatarDataHora(item.data_pedido)
-        : '-';
-      const statusClass = getStatusClass(item.status);
       const isConcluido = item.status === 'Concluída';
-      const statusLabel = item.status || 'Pendente';
-
-      const primeiroAndamento =
-        item.andamentos && item.andamentos.length > 0
-          ? item.andamentos[item.andamentos.length - 1].titulo
-          : null;
-
+      const efetivacao =
+        item.tipo_solicitacao === 'Cancelamento' && item.data_efetivacao
+          ? formatarDataISO(item.data_efetivacao)
+          : '-';
       return `
-            <div class="solicitacao-card ${
-              isConcluido ? 'is-completed' : ''
-            }" onclick="abrirModalDetalhes('${item.id}')">
-                <div class="card-header">
-                    <span class="protocolo">${escapeHtml(item.protocolo)}</span>
-                    <span class="status-badge ${statusClass}">${statusLabel}</span>
-                </div>
-                <div class="card-title">${escapeHtml(item.nome_cliente)}</div>
-                <div class="card-subtitle">${escapeHtml(
-                  item.tipo_solicitacao || 'Sem tipo'
-                )}</div>
-                <div class="card-details">
-                    <span><strong>Data:</strong> ${dataFormatada}</span>
-                    ${
-                      primeiroAndamento
-                        ? `<span><strong>Última:</strong> ${escapeHtml(
-                            primeiroAndamento
-                          )}</span>`
-                        : ''
-                    }
-                </div>
-                <div class="card-footer">
-                    <div class="badge-container">
-                        <span class="badge badge-date">${dataFormatada}</span>
-                        ${
-                          item.andamentos && item.andamentos.length > 0
-                            ? `<span class="badge badge-andamento">${item.andamentos.length} atualizações</span>`
-                            : ''
-                        }
-                    </div>
-                    <div class="card-actions" onclick="event.stopPropagation();">
-                        <button class="btn-icon ${
-                          isConcluido ? 'active-check' : ''
-                        }" title="${
-        isConcluido ? 'Reabrir' : 'Concluir'
-      }" onclick="toggleConcluido('${item.id}')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </button>
-                        <button class="btn-icon" title="Editar" onclick="editarSolicitacao('${
-                          item.id
-                        }')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                        <button class="btn-icon" title="Excluir" onclick="excluirSolicitacao('${
-                          item.id
-                        }')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+      <tr class="${
+        isConcluido ? 'is-completed' : ''
+      }" onclick="abrirModalDetalhes('${item.id}')">
+        <td><span class="protocolo">${escapeHtml(item.protocolo)}</span></td>
+        <td>${escapeHtml(item.nome_cliente)}</td>
+        <td class="cell-muted">${escapeHtml(item.tipo_solicitacao || '-')}</td>
+        <td class="cell-muted">${
+          item.data_pedido ? formatarDataHora(item.data_pedido) : '-'
+        }</td>
+        <td class="cell-muted">${efetivacao}</td>
+        <td class="cell-muted">${escapeHtml(item.analista || '-')}</td>
+        <td>${htmlSeletorStatus(item)}</td>
+        <td class="col-acoes">${htmlAcoes(item)}</td>
+      </tr>`;
     })
     .join('');
 }
 
 function getStatusClass(status) {
-  const map = {
-    Pendente: 'status-pendente',
-    'Análise Interna': 'status-analise',
-    'Em Andamento': 'status-andamento',
-    Concluída: 'status-concluido',
-    'Sem Retorno 1° Dia': 'status-semretorno1',
-    'Sem Retorno 2° Dia': 'status-semretorno2',
-    Atenção: 'status-atencao',
-  };
-  return map[status] || 'status-pendente';
+  return getStatusConfig(status).classe;
 }
 
 function atualizarStats(solicitacoes) {
@@ -466,9 +686,46 @@ function atualizarStats(solicitacoes) {
 }
 
 // ============================================================
+// VISÕES (Kanban / Lista)
+// ============================================================
+function trocarVisao(visao) {
+  visaoAtual = visao;
+  document.getElementById('mainContainer').dataset.view = visao;
+  document
+    .getElementById('tabKanban')
+    .classList.toggle('active', visao === 'kanban');
+  document
+    .getElementById('tabLista')
+    .classList.toggle('active', visao === 'lista');
+  document
+    .getElementById('viewKanban')
+    .classList.toggle('active', visao === 'kanban');
+  document
+    .getElementById('viewLista')
+    .classList.toggle('active', visao === 'lista');
+  aplicarFiltros();
+}
+
+// ============================================================
 // FILTROS
 // ============================================================
 function filtrarPorStatus(status) {
+  // No kanban, clicar no resumo leva até a coluna correspondente
+  if (visaoAtual === 'kanban') {
+    if (status === 'todos') return;
+    const col = document.querySelector(`.kanban-col[data-status="${status}"]`);
+    if (col) {
+      col.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+      col.classList.add('col-pulse');
+      setTimeout(() => col.classList.remove('col-pulse'), 1400);
+    }
+    return;
+  }
+
   if (status === 'todos') {
     document.getElementById('filterStatus').value = '';
   } else {
@@ -492,7 +749,9 @@ function filtrarPorStatus(status) {
 }
 
 function aplicarFiltros() {
-  const status = document.getElementById('filterStatus').value;
+  // O filtro de status só vale na Lista (no Kanban o status é a própria coluna)
+  const status =
+    visaoAtual === 'lista' ? document.getElementById('filterStatus').value : '';
   const tipo = document.getElementById('filterTipo').value;
   const busca = document
     .getElementById('filterSearch')
@@ -524,13 +783,23 @@ function limparFiltros() {
     card.style.boxShadow = 'none';
   });
 
-  renderizarSolicitacoes(todasSolicitacoes);
+  aplicarFiltros();
   atualizarStats(todasSolicitacoes);
 }
 
 // ============================================================
 // MODAIS
 // ============================================================
+function atualizarCampoEfetivacao() {
+  const ehCancelamento =
+    document.getElementById('tipoSolicitacao').value === 'Cancelamento';
+  const grupo = document.getElementById('grupoEfetivacao');
+  const campo = document.getElementById('dataEfetivacao');
+  grupo.classList.toggle('visivel', ehCancelamento);
+  campo.required = ehCancelamento;
+  if (!ehCancelamento) campo.value = '';
+}
+
 function abrirModalFormulario(editData = null) {
   document.getElementById('solicitacaoForm').reset();
   document.getElementById('solicitacaoId').value = '';
@@ -548,12 +817,20 @@ function abrirModalFormulario(editData = null) {
     document.getElementById('dataPedido').value = editData.data_pedido || '';
     document.getElementById('statusInicial').value =
       editData.status || 'Pendente';
+    atualizarCampoEfetivacao();
+    document.getElementById('dataEfetivacao').value = editData.data_efetivacao
+      ? String(editData.data_efetivacao).slice(0, 10)
+      : '';
+    document.getElementById('dataPedido').readOnly = false;
   } else {
     gerarProtocolo();
     const dataBrasilia = getDataHoraBrasilia();
     document.getElementById('dataPedido').value =
       formatarParaInput(dataBrasilia);
+    // Data e hora do pedido são automáticas em novas solicitações
+    document.getElementById('dataPedido').readOnly = true;
     document.getElementById('statusInicial').value = 'Pendente';
+    atualizarCampoEfetivacao();
   }
 
   document.getElementById('modalForm').classList.add('active');
@@ -595,33 +872,41 @@ function abrirModalDetalhes(id) {
 
   const body = document.getElementById('detalhesBody');
 
+  const linhaEfetivacao =
+    item.tipo_solicitacao === 'Cancelamento' && item.data_efetivacao
+      ? `<div class="detalhes-row"><strong>Efetivação:</strong> ${formatarDataISO(
+          item.data_efetivacao
+        )}</div>`
+      : '';
+
   let html = `
       <div class="detalhes-body-full">
           <div class="detalhes-coluna-esquerda">
               <div class="detalhes-info">
-                  <div class="detalhes-row"><strong>Protocolo:</strong> ${
+                  <div class="detalhes-row"><strong>Protocolo:</strong> ${escapeHtml(
                     item.protocolo
-                  }</div>
-                  <div class="detalhes-row"><strong>Cliente:</strong> ${
+                  )}</div>
+                  <div class="detalhes-row"><strong>Cliente:</strong> ${escapeHtml(
                     item.nome_cliente
-                  }</div>
+                  )}</div>
                   <div class="detalhes-row"><strong>Documento:</strong> ${
-                    item.documento || '-'
+                    escapeHtml(item.documento) || '-'
                   }</div>
-                  <div class="detalhes-row"><strong>Tipo:</strong> ${
+                  <div class="detalhes-row"><strong>Tipo:</strong> ${escapeHtml(
                     item.tipo_solicitacao
-                  }</div>
+                  )}</div>
+                  ${linhaEfetivacao}
                   <div class="detalhes-row"><strong>Analista:</strong> ${
-                    item.analista || '-'
+                    escapeHtml(item.analista) || '-'
                   }</div>
                   <div class="detalhes-row"><strong>Data do Pedido:</strong> ${
                     item.data_pedido ? formatarDataHora(item.data_pedido) : '-'
                   }</div>
                   <div class="detalhes-row"><strong>Status:</strong> <span class="status-badge ${getStatusClass(
                     item.status
-                  )}">${item.status}</span></div>
+                  )}">${getStatusLabel(item.status)}</span></div>
                   <div class="detalhes-row"><strong>Observações:</strong> ${
-                    item.observacoes || 'Nenhuma'
+                    escapeHtml(item.observacoes) || 'Nenhuma'
                   }</div>
               </div>
           </div>
@@ -766,15 +1051,58 @@ async function salvarAndamento(e) {
   }
 }
 
-function fecharModalDetalhes() {
-  document.getElementById('modalDetalhes').classList.remove('active');
-  document.body.style.overflow = '';
-  solicitacaoAtual = null;
-}
-
 // ============================================================
 // ALERTAS
+// Todos usam o mesmo modal e entram em fila (um por vez).
 // ============================================================
+function enfileirarAlerta(cfg) {
+  filaAlertas.push(cfg);
+  if (!alertaAberto) abrirProximoAlerta();
+}
+
+function abrirProximoAlerta() {
+  const cfg = filaAlertas.shift();
+  if (!cfg) {
+    alertaAberto = false;
+    return;
+  }
+  alertaAberto = true;
+  document.getElementById('modalAlertTitulo').textContent = cfg.titulo;
+  document.getElementById('modalAlertBody').innerHTML = cfg.html;
+  document.getElementById('modalAlertContent').className =
+    'modal-content modal-alert ' + (cfg.classe || '');
+  document.getElementById('modalAlert').classList.add('active');
+}
+
+function fecharModalAlert() {
+  document.getElementById('modalAlert').classList.remove('active');
+  alertaAberto = false;
+  setTimeout(abrirProximoAlerta, 250);
+}
+
+function verificarTodosAlertas(incluirCancelamento) {
+  if (incluirCancelamento) {
+    ultimoDiaAlertaCancelamento = formatarParaInput(
+      getDataHoraBrasilia()
+    ).slice(0, 10);
+    verificarAlertasCancelamento();
+  }
+  verificarAlertas();
+  verificarAlertasAguardando();
+}
+
+// A cada 1 hora: recarrega os dados reais e avisa de novo enquanto houver pendência.
+// O aviso de cancelamento é repetido quando vira o dia (página aberta por mais de 1 dia).
+function iniciarAlertaPorHora() {
+  if (timerAlertas) return;
+  timerAlertas = setInterval(async () => {
+    if (alertaAberto) return;
+    await carregarSolicitacoes();
+    const hoje = formatarParaInput(getDataHoraBrasilia()).slice(0, 10);
+    verificarTodosAlertas(hoje !== ultimoDiaAlertaCancelamento);
+  }, 60 * 60 * 1000);
+}
+
 function verificarAlertas() {
   const agora = new Date();
   const semRetorno1 = [];
@@ -811,7 +1139,6 @@ function verificarAlertas() {
 }
 
 function mostrarModalAlertas(semRetorno1, semRetorno2, atencao) {
-  const body = document.getElementById('modalAlertBody');
   let html = '';
 
   if (semRetorno1.length > 0) {
@@ -820,7 +1147,9 @@ function mostrarModalAlertas(semRetorno1, semRetorno2, atencao) {
             ${semRetorno1
               .map(
                 (s) =>
-                  `<div class="alerta-item">${s.protocolo} - ${s.nome_cliente}</div>`
+                  `<div class="alerta-item">${escapeHtml(
+                    s.protocolo
+                  )} - ${escapeHtml(s.nome_cliente)}</div>`
               )
               .join('')}
         </div>`;
@@ -832,7 +1161,9 @@ function mostrarModalAlertas(semRetorno1, semRetorno2, atencao) {
             ${semRetorno2
               .map(
                 (s) =>
-                  `<div class="alerta-item">${s.protocolo} - ${s.nome_cliente}</div>`
+                  `<div class="alerta-item">${escapeHtml(
+                    s.protocolo
+                  )} - ${escapeHtml(s.nome_cliente)}</div>`
               )
               .join('')}
         </div>`;
@@ -844,18 +1175,101 @@ function mostrarModalAlertas(semRetorno1, semRetorno2, atencao) {
             ${atencao
               .map(
                 (s) =>
-                  `<div class="alerta-item">${s.protocolo} - ${s.nome_cliente}</div>`
+                  `<div class="alerta-item">${escapeHtml(
+                    s.protocolo
+                  )} - ${escapeHtml(s.nome_cliente)}</div>`
               )
               .join('')}
         </div>`;
   }
 
-  body.innerHTML = html;
-  document.getElementById('modalAlert').classList.add('active');
+  enfileirarAlerta({ titulo: 'Resumo do Dia', html: html, classe: '' });
 }
 
-function fecharModalAlert() {
-  document.getElementById('modalAlert').classList.remove('active');
+// ---- Aguardando retorno e-mail (aviso por hora) ----
+function verificarAlertasAguardando() {
+  const agora = new Date();
+  const aguardando = todasSolicitacoes.filter((s) => s.status === 'Pendente');
+  if (aguardando.length === 0) return;
+
+  const html = `<div class="alerta-categoria alerta-roxo">
+      <h4>${aguardando.length} solicitação(ões) aguardando retorno por e-mail</h4>
+      ${aguardando
+        .map((s) => {
+          const horas = Math.max(
+            0,
+            Math.floor((agora - new Date(s.data_pedido)) / (1000 * 60 * 60))
+          );
+          return `<div class="alerta-item">${escapeHtml(
+            s.protocolo
+          )} - ${escapeHtml(s.nome_cliente)} <span style="color:#8e94a8">(${formatarTempo(
+            horas
+          )})</span></div>`;
+        })
+        .join('')}
+    </div>
+    <p class="relatorio-resumo">Você será avisado novamente a cada hora até o status mudar.</p>`;
+
+  enfileirarAlerta({
+    titulo: 'Aguardando retorno e-mail',
+    html: html,
+    classe: 'alert-aguardando',
+  });
+}
+
+// ---- Cancelamento próximo da efetivação ----
+function verificarAlertasCancelamento() {
+  const hoje = getDataHoraBrasilia();
+  hoje.setHours(0, 0, 0, 0);
+
+  const lista = [];
+
+  todasSolicitacoes.forEach((sol) => {
+    if (sol.tipo_solicitacao !== 'Cancelamento') return;
+    if (!sol.data_efetivacao || sol.status === 'Concluída') return;
+
+    const efetivacao = parseDataISO(sol.data_efetivacao);
+    if (!efetivacao) return;
+
+    if (mesmoDia(hoje, efetivacao)) {
+      lista.push({ sol, efetivacao, quando: 'hoje' });
+    } else if (mesmoDia(hoje, diaUtilAnterior(efetivacao))) {
+      lista.push({ sol, efetivacao, quando: 'antes' });
+    }
+  });
+
+  if (lista.length === 0) return;
+
+  // Os que efetivam hoje aparecem primeiro
+  lista.sort((a, b) => (a.quando === 'hoje' ? -1 : 1) - (b.quando === 'hoje' ? -1 : 1));
+
+  const linhas = lista
+    .map(
+      (r) => `<tr>
+        <td>${escapeHtml(r.sol.nome_cliente)}</td>
+        <td>${escapeHtml(r.sol.protocolo)}</td>
+        <td>${formatarData(r.efetivacao)}</td>
+        <td><span class="tag-prazo ${
+          r.quando === 'hoje' ? 'tag-hoje' : 'tag-amanha'
+        }">${
+        r.quando === 'hoje' ? 'Efetiva hoje' : '1 dia útil antes'
+      }</span></td>
+      </tr>`
+    )
+    .join('');
+
+  const html = `
+    <p class="relatorio-resumo">${lista.length} cliente(s) com cancelamento na data de efetivação ou a 1 dia útil dela.</p>
+    <table class="relatorio-table">
+      <thead><tr><th>Cliente</th><th>Solicitação</th><th>Efetivação</th><th>Prazo</th></tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>`;
+
+  enfileirarAlerta({
+    titulo: 'Cliente próximo a data de cancelamento',
+    html: html,
+    classe: 'alert-cancel',
+  });
 }
 
 // ============================================================
@@ -890,6 +1304,53 @@ function formatarParaInput(date) {
   return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
 }
 
+// Converte 'AAAA-MM-DD' em Date local (evita deslocamento de fuso)
+function parseDataISO(str) {
+  const m = String(str || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+}
+
+function formatarData(date) {
+  const dia = String(date.getDate()).padStart(2, '0');
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  return `${dia}/${mes}/${date.getFullYear()}`;
+}
+
+function formatarDataISO(str) {
+  const d = parseDataISO(str);
+  return d ? formatarData(d) : '-';
+}
+
+function mesmoDia(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+// Dias úteis = segunda a sexta (feriados não são considerados)
+function ehDiaUtil(date) {
+  const d = date.getDay();
+  return d !== 0 && d !== 6;
+}
+
+function diaUtilAnterior(date) {
+  const r = new Date(date);
+  do {
+    r.setDate(r.getDate() - 1);
+  } while (!ehDiaUtil(r));
+  return r;
+}
+
+function formatarTempo(horas) {
+  if (horas < 1) return 'há menos de 1h';
+  if (horas < 24) return `há ${horas}h`;
+  const dias = Math.floor(horas / 24);
+  const resto = horas % 24;
+  return resto ? `há ${dias}d ${resto}h` : `há ${dias}d`;
+}
+
 function escapeHtml(text) {
   if (!text) return '';
   const div = document.createElement('div');
@@ -904,5 +1365,5 @@ function mostrarToast(mensagem, tipo = 'success') {
   clearTimeout(toast._timeout);
   toast._timeout = setTimeout(() => {
     toast.classList.remove('show');
-  }, 3000);
+  }, 3500);
 }
