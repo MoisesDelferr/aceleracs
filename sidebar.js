@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Mapeamento das opções do menu com ícones Font Awesome (versão regular/outline)
   const menuItems = [
-    { href: 'index.html', label: 'Feed', icon: 'fa-regular fa-file-lines' },
+    { href: 'index.html', label: 'Feed', icon: 'fa-regular fa-comments' },
     { href: 'solicitacoes.html', label: 'Solicitações', icon: 'fa-regular fa-file-lines' },
     { href: 'calcular.html', label: 'Calcular datas', icon: 'fa-regular fa-calendar' },
     { href: 'atividades.html', label: 'Atividades', icon: 'fa-regular fa-rectangle-list' },

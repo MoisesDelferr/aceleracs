@@ -3,12 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gerenciamento de Lembretes - CS</title>
+    <title>Minha Agenda - Acelera CS</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <!-- Evita erro 404 do Favicon no console -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
     <style>
       * {
@@ -18,193 +17,405 @@
         font-family: 'Inter', sans-serif;
       }
       body {
-        background-color: #f1f2f7;
+        background-color: #f8f9fc;
         display: flex;
         min-height: 100vh;
         color: #1a1d24;
       }
+
       /* --- CONTEÚDO PRINCIPAL --- */
       .main-content {
         margin-left: 250px;
         flex: 1;
         width: calc(100% - 250px);
-        padding: 40px 60px;
+        padding: 32px 50px 60px;
         display: flex;
         flex-direction: column;
         align-items: center;
       }
       .container {
         width: 100%;
-        max-width: 900px;
+        max-width: 1200px;
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 32px;
       }
+
+      /* --- CABEÇALHO (sem saudação) --- */
       .page-header {
-        margin-bottom: 24px;
-      }
-      .page-title {
-        color: #1a1d24;
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 4px;
-        letter-spacing: -0.3px;
-      }
-      .subtitle {
-        color: #727785;
-        font-size: 0.9rem;
-      }
-      /* CONTROLES E FILTROS */
-      .controls-bar {
+        grid-column: 1 / -1;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-        gap: 16px;
+        margin-bottom: 8px;
+      }
+      .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a1d24;
+        letter-spacing: -0.4px;
+      }
+      .btn-new {
+        background: #6226ef;
+        color: #fff;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(98, 38, 239, 0.25);
+      }
+      .btn-new:hover {
+        background: #4b18cb;
+        transform: translateY(-2px);
+      }
+
+      /* --- COLUNA ESQUERDA (LISTAS) --- */
+      .list-section {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      /* Filtros Rápidos */
+      .quick-filters {
+        display: flex;
+        gap: 8px;
         flex-wrap: wrap;
       }
-      .tabs {
-        display: flex;
-        background: #e4e6f1;
-        padding: 4px;
-        border-radius: 10px;
-        gap: 2px;
-      }
-      .tab-btn {
-        border: none;
-        background: transparent;
+      .filter-pill {
+        background: #fff;
+        border: 1px solid #eef0f4;
         padding: 8px 16px;
-        border-radius: 8px;
+        border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
         color: #64748b;
         cursor: pointer;
         transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
       }
-      .tab-btn.active {
-        background: #ffffff;
-        color: #1a1d24;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      .filter-pill:hover {
+        border-color: #cbd5e1;
       }
-      .filter-select {
-        padding: 8px 14px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: #1a1d24;
-        background: #ffffff;
-        outline: none;
-        cursor: pointer;
+      .filter-pill.active {
+        background: #1a1d24;
+        color: #fff;
+        border-color: #1a1d24;
       }
-      /* CARDS DE LEMBRETES */
-      .reminders-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .reminder-card {
-        background: #ffffff;
-        border-radius: 12px;
-        border: 1px solid #e4e6f1;
-        padding: 20px;
+
+      /* Títulos de Seção */
+      .section-title {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .section-title h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a1d24;
+        letter-spacing: -0.3px;
+      }
+
+      /* =========================================
+         CARDS ESTILO POST-IT AMARELO
+         ========================================= */
+      .reminders-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      
+      .reminder-card {
+        background: #fef9c3; /* amarelo post-it */
+        border-radius: 4px 4px 16px 4px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
         transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+        /* Sombra de papel + leve "dobra" no canto */
+        box-shadow: 
+          0 1px 1px rgba(0,0,0,0.05),
+          0 6px 12px rgba(234, 179, 8, 0.12),
+          inset 0 -2px 0 rgba(0,0,0,0.02);
       }
+
+      /* Dobra no canto inferior direito (efeito post-it) */
+      .reminder-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 22px 22px;
+        border-color: transparent transparent rgba(234, 179, 8, 0.25) transparent;
+      }
+
       .reminder-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        transform: translateY(-3px) rotate(-0.4deg);
+        box-shadow: 
+          0 1px 1px rgba(0,0,0,0.05),
+          0 14px 24px rgba(234, 179, 8, 0.22);
       }
+
+      /* Variação: Urgente = post-it mais alaranjado */
       .reminder-card.is-urgent {
-        border-left: 4px solid #dc2626;
+        background: #ffedd5;
+        box-shadow: 
+          0 1px 1px rgba(0,0,0,0.05),
+          0 6px 12px rgba(249, 115, 22, 0.15),
+          inset 0 -2px 0 rgba(0,0,0,0.02);
       }
+      .reminder-card.is-urgent::after {
+        border-color: transparent transparent rgba(249, 115, 22, 0.25) transparent;
+      }
+      .reminder-card.is-urgent:hover {
+        box-shadow: 
+          0 1px 1px rgba(0,0,0,0.05),
+          0 14px 24px rgba(249, 115, 22, 0.25);
+      }
+
+      /* Variação: Concluído = post-it "apagado" */
       .reminder-card.is-completed {
-        opacity: 0.55;
-        background: #fafafc;
+        background: #f1f2f7;
+        opacity: 0.7;
+        box-shadow: none;
+      }
+      .reminder-card.is-completed::after {
+        border-color: transparent transparent rgba(0,0,0,0.06) transparent;
+      }
+      .reminder-card.is-completed:hover {
+        transform: none;
+        box-shadow: none;
       }
       .reminder-card.is-completed h4 {
         text-decoration: line-through;
+        color: #8e94a8;
       }
+      .reminder-card.is-completed .card-tag {
+        background: #e2e8f0; color: #64748b;
+      }
+
+      .card-tags {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .card-tag {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.6);
+        color: #713f12;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .card-tag.urgent-tag {
+        background: #ea580c; color: #fff;
+      }
+      .card-tag.date-tag {
+        display: flex; align-items: center; gap: 4px;
+      }
+
       .reminder-info h4 {
-        font-size: 0.95rem;
-        font-weight: 600;
+        font-size: 1.05rem;
+        font-weight: 700;
         color: #1a1d24;
         margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        line-height: 1.3;
       }
       .reminder-info p {
-        font-size: 0.875rem;
-        color: #64748b;
-        margin-bottom: 12px;
-        line-height: 1.4;
+        font-size: 0.85rem;
+        color: #713f12;
+        line-height: 1.45;
+        margin-bottom: 20px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        opacity: 0.85;
       }
-      .badge-container {
+      .reminder-card.is-urgent .reminder-info p { color: #7c2d12; }
+      .reminder-card.is-completed .reminder-info p { color: #64748b; }
+
+      .card-footer {
         display: flex;
-        gap: 8px;
+        justify-content: space-between;
         align-items: center;
+        border-top: 1px dashed rgba(0,0,0,0.1);
+        padding-top: 14px;
+        margin-top: auto;
+        position: relative;
+        z-index: 1;
       }
-      .badge {
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .badge-date {
-        background: #f1f2f7;
-        color: #475569;
-      }
-      .badge-urgent {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-      }
-      /* BOTÕES DE AÇÃO NO CARD */
       .card-actions {
         display: flex;
-        gap: 4px;
+        gap: 6px;
       }
       .btn-icon-action {
-        background: transparent;
-        border: 1px solid transparent;
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
+        background: rgba(255,255,255,0.65);
+        border: 1px solid rgba(0,0,0,0.05);
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.2s;
-      }
-      .btn-icon-action svg {
-        width: 16px;
-        height: 16px;
-        stroke: #64748b;
+        color: #57534e;
       }
       .btn-icon-action:hover {
-        background: #f1f2f7;
-        border-color: #e4e6f1;
+        background: #fff;
+        color: #1a1d24;
       }
-      .btn-icon-action.active-urgent svg {
-        stroke: #dc2626;
-        fill: #fef2f2;
+      .btn-icon-action.active-urgent {
+        background: #fff; color: #dc2626; border-color: #fecaca;
       }
-      .btn-icon-action.active-check svg {
-        stroke: #16a34a;
+      .btn-icon-action.active-check {
+        background: #ecfdf5; color: #16a34a; border-color: #a7f3d0;
       }
+
+      /* --- COLUNA DIREITA (CALENDÁRIO) --- */
+      .right-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .calendar-widget {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #eef0f4;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+      }
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .calendar-header h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1d24;
+      }
+      .cal-nav {
+        display: flex;
+        gap: 4px;
+      }
+      .cal-nav button {
+        background: #f8f9fc;
+        border: none;
+        width: 28px; height: 28px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #64748b;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .cal-nav button:hover { background: #eef0f4; color: #1a1d24; }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        text-align: center;
+      }
+      .cal-day-name {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #8e94a8;
+        margin-bottom: 8px;
+      }
+      .cal-day {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #1a1d24;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 0 auto;
+        position: relative;
+      }
+      .cal-day:hover { background: #f1f2f7; }
+      .cal-day.empty { cursor: default; }
+      .cal-day.today {
+        background: #6226ef;
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(98, 38, 239, 0.3);
+      }
+      .cal-day.selected {
+        background: #f5f0ff;
+        color: #6226ef;
+        font-weight: 700;
+        border: 1px solid #6226ef;
+      }
+      .cal-day.has-task::after {
+        content: '';
+        display: block;
+        width: 4px; height: 4px;
+        background: #6226ef;
+        border-radius: 50%;
+        position: absolute;
+        bottom: 4px;
+      }
+      .cal-day.today.has-task::after { background: #fff; }
+
+      /* Card de Dica */
+      .tip-card {
+        background: linear-gradient(135deg, #1a1d24, #2a2e3d);
+        border-radius: 20px;
+        padding: 24px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+      .tip-card::before {
+        content: '✨';
+        position: absolute;
+        top: 10px; right: 10px;
+        font-size: 40px; opacity: 0.2;
+      }
+      .tip-card h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        position: relative;
+      }
+      .tip-card p {
+        font-size: 0.85rem;
+        color: #a2a8bb;
+        line-height: 1.5;
+        position: relative;
+      }
+
       /* BOTÃO FLUTUANTE (FAB) */
       .fab-button {
         position: fixed;
         bottom: 32px;
         right: 32px;
-        width: 52px;
-        height: 52px;
+        width: 56px;
+        height: 56px;
         background: #6226ef;
         color: #ffffff;
         border: none;
@@ -213,35 +424,27 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 4px 14px rgba(98, 38, 239, 0.35);
+        box-shadow: 0 6px 20px rgba(98, 38, 239, 0.4);
         transition: all 0.2s;
         z-index: 99;
+        display: none;
       }
-      .fab-button svg {
-        width: 24px;
-        height: 24px;
-        stroke: white;
-      }
-      .fab-button:hover {
-        transform: scale(1.05);
-        background: #4b18cb;
-      }
+      .fab-button svg { stroke: #fff; }
+
       /* MODAIS */
       .modal-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
         background: rgba(15, 18, 28, 0.4);
-        backdrop-filter: blur(3px);
+        backdrop-filter: blur(4px);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 1000;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.2s ease;
+        transition: opacity 0.25s ease;
       }
       .modal-overlay.active {
         opacity: 1;
@@ -249,44 +452,54 @@
       }
       .modal-content {
         background: #ffffff;
-        border-radius: 12px;
+        border-radius: 20px;
         width: 90%;
         max-width: 480px;
-        padding: 24px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 32px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        transform: translateY(10px) scale(0.98);
+        transition: transform 0.25s;
+      }
+      .modal-overlay.active .modal-content {
+        transform: translateY(0) scale(1);
       }
       .modal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
       }
       .modal-header h3 {
-        font-size: 1.1rem;
-        font-weight: 700;
+        font-size: 1.2rem;
+        font-weight: 800;
         color: #1a1d24;
       }
       .btn-close-modal {
         border: none;
-        background: none;
+        background: #f8f9fc;
+        border-radius: 50%;
+        width: 32px; height: 32px;
         cursor: pointer;
-        padding: 4px;
+        display: flex; align-items: center; justify-content: center;
+        color: #64748b;
+        transition: 0.2s;
       }
-      .btn-close-modal svg {
-        width: 20px;
-        height: 20px;
-        stroke: #9499a6;
-      }
+      .btn-close-modal:hover { background: #eef0f4; color: #1a1d24; }
+
       .form-group {
         display: flex;
         flex-direction: column;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
       }
       .checkbox-group {
         flex-direction: row;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         cursor: pointer;
+        background: #f8f9fc;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #eef0f4;
       }
       label {
         font-weight: 600;
@@ -298,334 +511,364 @@
       input[type='date'],
       textarea {
         width: 100%;
-        padding: 10px 12px;
+        padding: 12px 14px;
         border: 1px solid #cbd5e1;
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 0.9rem;
         outline: none;
+        background: #f8f9fc;
+        transition: 0.2s;
       }
       input[type='text']:focus,
       input[type='date']:focus,
       textarea:focus {
         border-color: #6226ef;
-        box-shadow: 0 0 0 3px rgba(98, 38, 239, 0.1);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(98, 38, 239, 0.1);
       }
-      textarea {
-        resize: vertical;
-        min-height: 80px;
-      }
+      textarea { resize: vertical; min-height: 90px; }
       .btn-modal-submit {
         width: 100%;
         background: #6226ef;
         color: white;
         border: none;
-        padding: 11px;
-        border-radius: 8px;
-        font-weight: 600;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
         cursor: pointer;
-        font-size: 0.9rem;
         margin-top: 8px;
-        transition: background 0.2s;
+        transition: 0.2s;
       }
-      .btn-modal-submit:hover {
-        background: #4b18cb;
+      .btn-modal-submit:hover { background: #4b18cb; }
+
+      /* Responsivo */
+      @media (max-width: 1024px) {
+        .container { grid-template-columns: 1fr; }
+        .right-sidebar { display: none; }
+      }
+      @media (max-width: 768px) {
+        .main-content { padding: 20px; }
+        .reminders-list { grid-template-columns: 1fr; }
+        .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        .fab-button { display: flex; }
       }
     </style>
   </head>
   <body>
     <div id="sidebar-container"></div>
+    
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="main-content">
       <div class="container">
+        
+        <!-- CABEÇALHO (sem saudação) -->
         <div class="page-header">
-          <h2 class="page-title">Gestão de Lembretes</h2>
-          <p class="subtitle">
-            Acompanhamento centralizado de pendências e compromissos
-            operacionais.
-          </p>
+          <h1>Minha Agenda</h1>
+          <button class="btn-new" onclick="abrirModalFormulario()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Novo Compromisso
+          </button>
         </div>
-        <!-- BARRA DE NAVEGAÇÃO / FILTROS -->
-        <div class="controls-bar">
-          <div class="tabs">
-            <button class="tab-btn active" onclick="setTab('a_vencer', event)">
-              A Vencer
-            </button>
-            <button class="tab-btn" onclick="setTab('urgentes', event)">
-              Urgentes
-            </button>
-            <button class="tab-btn" onclick="setTab('vencidos', event)">
-              Vencidos
-            </button>
-            <button class="tab-btn" onclick="setTab('concluidos', event)">
-              Concluídos
-            </button>
+
+        <!-- COLUNA ESQUERDA: LISTAS -->
+        <div class="list-section">
+          
+          <!-- Filtros -->
+          <div class="quick-filters">
+            <button class="filter-pill active" onclick="setTab('todas', event)">Todas</button>
+            <button class="filter-pill" onclick="setTab('hoje', event)">Hoje</button>
+            <button class="filter-pill" onclick="setTab('semana', event)">Esta Semana</button>
+            <button class="filter-pill" onclick="setTab('urgentes', event)">Urgentes</button>
+            <button class="filter-pill" onclick="setTab('concluidos', event)">Concluídos</button>
           </div>
-          <select
-            class="filter-select"
-            id="timeFilter"
-            onchange="renderizarLembretes()"
-          >
-            <option value="todos">Período: Todos</option>
-            <option value="hoje">Período: Hoje</option>
-            <option value="semana">Período: Esta Semana</option>
-            <option value="mes">Período: Este Mês</option>
-          </select>
+
+          <!-- Lista de Tarefas -->
+          <div>
+            <div class="section-title">
+              <h2 id="sectionTitle">Tarefas Pendentes</h2>
+            </div>
+            <div class="reminders-list" id="remindersContainer">
+              <!-- Populado via JS -->
+            </div>
+          </div>
+
         </div>
-        <!-- LISTAGEM DE CARDS -->
-        <div class="reminders-list" id="remindersContainer">
-          <!-- Conteúdo populado por JavaScript -->
-        </div>
+
+        <!-- COLUNA DIREITA: CALENDÁRIO -->
+        <aside class="right-sidebar">
+          <div class="calendar-widget">
+            <div class="calendar-header">
+              <h3 id="calMonthYear">Novembro 2026</h3>
+              <div class="cal-nav">
+                <button onclick="mudarMes(-1)">‹</button>
+                <button onclick="mudarMes(1)">›</button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+              <!-- Populado via JS -->
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <h4>Dica de Produtividade</h4>
+            <p>Priorize as tarefas urgentes antes do meio-dia. Você terá mais clareza e energia para resolver o resto da tarde.</p>
+          </div>
+        </aside>
+
       </div>
     </main>
-    <!-- BOTÃO FLUTUANTE (FAB) -->
-    <button
-      class="fab-button"
-      onclick="abrirModalFormulario()"
-      title="Adicionar Novo Lembrete"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
+
+    <!-- BOTÃO FLUTUANTE (Mobile) -->
+    <button class="fab-button" onclick="abrirModalFormulario()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
+
     <!-- MODAL DE FORMULÁRIO -->
     <div class="modal-overlay" id="modalForm">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 id="modalFormTitle">Novo Lembrete</h3>
+          <h3 id="modalFormTitle">Novo Compromisso</h3>
           <button class="btn-close-modal" onclick="fecharModalFormulario()">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         <form id="reminderForm" onsubmit="salvarLembrete(event)">
           <input type="hidden" id="reminderId" />
           <div class="form-group">
-            <label for="reminderTitle">Título do Lembrete</label>
-            <input
-              type="text"
-              id="reminderTitle"
-              required
-              placeholder="Ex: Reunião de alinhamento estratégico"
-            />
+            <label for="reminderTitle">Título do Compromisso</label>
+            <input type="text" id="reminderTitle" required placeholder="Ex: Reunião com cliente" />
           </div>
           <div class="form-group">
-            <label for="dueDate">Data do Vencimento</label>
+            <label for="dueDate">Data</label>
             <input type="date" id="dueDate" required />
           </div>
           <div class="form-group">
-            <label for="reminderBody">Detalhes do Acompanhamento</label>
-            <textarea
-              id="reminderBody"
-              placeholder="Insira o contexto ou observações importantes..."
-            ></textarea>
+            <label for="reminderBody">Detalhes / Anotações</label>
+            <textarea id="reminderBody" placeholder="Insira os detalhes ou links importantes..."></textarea>
           </div>
           <div class="form-group checkbox-group">
-            <input type="checkbox" id="isUrgent" />
-            <label for="isUrgent" style="margin: 0"
-              >Definir prioridade como Urgente</label
-            >
+            <input type="checkbox" id="isUrgent" style="width: 18px; height: 18px; cursor: pointer;" />
+            <label for="isUrgent" style="margin: 0; cursor: pointer;">Marcar como urgente</label>
           </div>
-          <button type="submit" class="btn-modal-submit">
-            Salvar Lembrete
-          </button>
+          <button type="submit" class="btn-modal-submit">Salvar</button>
         </form>
       </div>
     </div>
+
     <!-- MODAL DE ALERTA DO SISTEMA -->
     <div class="modal-overlay" id="modalAlert">
       <div class="modal-content">
         <div class="modal-header">
           <h3>Pendências do Dia / Vencidas</h3>
         </div>
-        <div
-          id="modalAlertBody"
-          style="max-height: 250px; overflow-y: auto; margin-bottom: 16px"
-        ></div>
-        <button class="btn-modal-submit" onclick="fecharModalAlert()">
-          Confirmar e Acessar
-        </button>
+        <div id="modalAlertBody" style="max-height: 250px; overflow-y: auto; margin-bottom: 16px"></div>
+        <button class="btn-modal-submit" onclick="fecharModalAlert()">Entendido</button>
       </div>
     </div>
 
-    <!-- CARREGAMENTO ORDENADO DE SCRIPTS NO FINAL DO BODY -->
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
     <script src="sidebar.js"></script>
 
     <script>
-      let abaAtual = 'a_vencer';
+      let abaAtual = 'todas';
       let lembretes = [];
+      
+      // Estado do Calendário
+      let dataAtualCalendario = new Date();
+      let dataSelecionada = null;
 
       window.addEventListener('DOMContentLoaded', async () => {
+        document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
         await carregarLembretesDoBanco();
         checarAlertasAoEntrar();
+        renderizarCalendario();
       });
 
-      /* --- BUSCAR DADOS DO SUPABASE --- */
       async function carregarLembretesDoBanco() {
-        // Usa a variável padronizada 'supabase'
-        const {
-          data: { user },
-          error: userError,
-        } = await _supabase.auth.getUser();
-
-        if (userError || !user) {
-          console.error('Usuário não autenticado.');
-          return;
-        }
+        const { data: { user }, error: userError } = await _supabase.auth.getUser();
+        if (userError || !user) return;
 
         const { data, error } = await _supabase
           .from('reminders')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('data', { ascending: true });
 
         if (error) {
           console.error('Erro ao buscar lembretes:', error.message);
         } else {
           lembretes = data;
           renderizarLembretes();
+          renderizarCalendario();
         }
       }
 
       function setTab(tab, event) {
         abaAtual = tab;
-        document
-          .querySelectorAll('.tab-btn')
-          .forEach((btn) => btn.classList.remove('active'));
-        if (event && event.currentTarget) {
-          event.currentTarget.classList.add('active');
+        document.querySelectorAll('.filter-pill').forEach((btn) => btn.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        
+        if (tab === 'hoje') {
+          dataSelecionada = new Date().toISOString().split('T')[0];
+        } else {
+          dataSelecionada = null;
         }
+        
         renderizarLembretes();
       }
 
-      /* --- RENDERIZAÇÃO E FILTROS --- */
       function renderizarLembretes() {
         const container = document.getElementById('remindersContainer');
-        const filtroTempo = document.getElementById('timeFilter').value;
+        const title = document.getElementById('sectionTitle');
         const hojeStr = new Date().toISOString().split('T')[0];
+        const hoje = new Date();
 
-        let filtrados = lembretes.filter((item) => {
-          if (abaAtual === 'a_vencer')
-            return item.data >= hojeStr && !item.concluido;
-          if (abaAtual === 'urgentes') return item.urgente && !item.concluido;
-          if (abaAtual === 'vencidos')
-            return item.data < hojeStr && !item.concluido;
-          if (abaAtual === 'concluidos') return item.concluido;
-          return true;
-        });
+        let filtrados = lembretes;
 
-        if (filtroTempo !== 'todos') {
-          const hoje = new Date();
-          filtrados = filtrados.filter((item) => {
-            const dataItem = new Date(item.data + 'T00:00:00');
-            if (filtroTempo === 'hoje') return item.data === hojeStr;
-            if (filtroTempo === 'semana') {
-              const diffDias = (dataItem - hoje) / (1000 * 60 * 60 * 24);
-              return diffDias >= -1 && diffDias <= 7;
-            }
-            if (filtroTempo === 'mes') {
-              return (
-                dataItem.getMonth() === hoje.getMonth() &&
-                dataItem.getFullYear() === hoje.getFullYear()
-              );
-            }
-            return true;
+        if (abaAtual === 'todas') {
+          title.innerText = 'Todos os Compromissos';
+          filtrados = filtrados.filter(i => !i.concluido);
+        } else if (abaAtual === 'hoje') {
+          title.innerText = 'Compromissos de Hoje';
+          filtrados = filtrados.filter(i => i.data === hojeStr && !i.concluido);
+        } else if (abaAtual === 'semana') {
+          title.innerText = 'Próximos 7 dias';
+          filtrados = filtrados.filter(i => {
+            if (i.concluido || !i.data) return false;
+            const d = new Date(i.data + 'T00:00:00');
+            const diff = (d - hoje) / (1000 * 60 * 60 * 24);
+            return diff >= 0 && diff <= 7;
           });
+        } else if (abaAtual === 'urgentes') {
+          title.innerText = 'Prioridades Altas';
+          filtrados = filtrados.filter(i => i.urgente && !i.concluido);
+        } else if (abaAtual === 'concluidos') {
+          title.innerText = 'Histórico de Concluídos';
+          filtrados = filtrados.filter(i => i.concluido);
         }
 
-        container.innerHTML =
-          filtrados.length === 0
-            ? `<p style="color: #9499a6; font-size:0.9rem; text-align: center; margin-top: 40px;">Nenhum registro encontrado nesta visualização.</p>`
-            : filtrados
-                .map(
-                  (item) => `
-            <div class="reminder-card ${item.urgente ? 'is-urgent' : ''} ${
-                    item.concluido ? 'is-completed' : ''
-                  }">
-              <div class="reminder-info">
-                <h4>${item.titulo}</h4>
-                <p>${item.corpo || 'Sem descrição cadastrada.'}</p>
-                <div class="badge-container">
-                  <span class="badge badge-date">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    Vencimento: ${
-                      item.data
-                        ? item.data.split('-').reverse().join('/')
-                        : 'Sem data'
-                    }
+        if (dataSelecionada && abaAtual !== 'concluidos') {
+          title.innerText = `Compromissos de ${dataSelecionada.split('-').reverse().join('/')}`;
+          filtrados = filtrados.filter(i => i.data === dataSelecionada);
+        }
+
+        if (filtrados.length === 0) {
+          container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #8e94a8; background: #fff; border-radius: 20px; border: 1px dashed #e4e6f1;">
+            <svg style="width: 48px; height: 48px; stroke: #cbd5e1; margin-bottom: 12px;" viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <br>Nenhum compromisso encontrado.
+          </div>`;
+          return;
+        }
+
+        container.innerHTML = filtrados.map((item) => {
+          const dataFormatada = item.data ? item.data.split('-').reverse().join('/') : 'Sem data';
+          
+          return `
+            <div class="reminder-card ${item.urgente ? 'is-urgent' : ''} ${item.concluido ? 'is-completed' : ''}">
+              <div>
+                <div class="card-tags">
+                  ${item.urgente ? `<span class="card-tag urgent-tag">Urgente</span>` : ''}
+                  <span class="card-tag date-tag">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    ${dataFormatada}
                   </span>
-                  ${
-                    item.urgente
-                      ? `
-                    <span class="badge badge-urgent">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                      Alta Prioridade
-                    </span>`
-                      : ''
-                  }
+                </div>
+                <div class="reminder-info">
+                  <h4>${item.titulo}</h4>
+                  <p>${item.corpo || 'Sem detalhes adicionais.'}</p>
                 </div>
               </div>
-              <div class="card-actions">
-                <button class="btn-icon-action ${
-                  item.concluido ? 'active-check' : ''
-                }" title="${
-                    item.concluido
-                      ? 'Reabrir Lembrete'
-                      : 'Marcar como Concluído'
-                  }" onclick="toggleConcluido('${item.id}')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              
+              <div class="card-footer">
+                <button class="btn-icon-action ${item.concluido ? 'active-check' : ''}" title="${item.concluido ? 'Reabrir' : 'Concluir'}" onclick="toggleConcluido('${item.id}')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </button>
-                <button class="btn-icon-action ${
-                  item.urgente ? 'active-urgent' : ''
-                }" title="Alternar Prioridade Urgente" onclick="toggleUrgente('${
-                    item.id
-                  }')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                </button>
-                <button class="btn-icon-action" title="Editar Lembrete" onclick="editarLembrete('${
-                  item.id
-                }')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </button>
-                <button class="btn-icon-action" title="Excluir Lembrete" onclick="excluirLembrete('${
-                  item.id
-                }')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
+                <div class="card-actions">
+                  <button class="btn-icon-action ${item.urgente ? 'active-urgent' : ''}" title="Alternar Urgência" onclick="toggleUrgente('${item.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  </button>
+                  <button class="btn-icon-action" title="Editar" onclick="editarLembrete('${item.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="btn-icon-action" title="Excluir" onclick="excluirLembrete('${item.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
               </div>
             </div>
-          `
-                )
-                .join('');
+          `;
+        }).join('');
+      }
+
+      /* --- CALENDÁRIO --- */
+      function renderizarCalendario() {
+        const grid = document.getElementById('calendarGrid');
+        const monthYearLabel = document.getElementById('calMonthYear');
+        
+        const ano = dataAtualCalendario.getFullYear();
+        const mes = dataAtualCalendario.getMonth();
+        
+        const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        monthYearLabel.innerText = `${meses[mes]} ${ano}`;
+        
+        const primeiroDia = new Date(ano, mes, 1).getDay();
+        const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+        
+        let html = '';
+        ['Do', 'Se', 'Te', 'Qu', 'Qu', 'Se', 'Sá'].forEach(d => {
+          html += `<div class="cal-day-name">${d}</div>`;
+        });
+        
+        for (let i = 0; i < primeiroDia; i++) {
+          html += `<div class="cal-day empty"></div>`;
+        }
+        
+        const hojeStr = new Date().toISOString().split('T')[0];
+        
+        for (let dia = 1; dia <= diasNoMes; dia++) {
+          const diaStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+          
+          let classes = 'cal-day';
+          if (diaStr === hojeStr) classes += ' today';
+          if (diaStr === dataSelecionada) classes += ' selected';
+          
+          const temTarefa = lembretes.some(l => l.data === diaStr && !l.concluido);
+          if (temTarefa) classes += ' has-task';
+          
+          html += `<div class="${classes}" onclick="selecionarDia('${diaStr}')">${dia}</div>`;
+        }
+        
+        grid.innerHTML = html;
+      }
+
+      function mudarMes(delta) {
+        dataAtualCalendario.setMonth(dataAtualCalendario.getMonth() + delta);
+        renderizarCalendario();
+      }
+
+      function selecionarDia(diaStr) {
+        if (dataSelecionada === diaStr) {
+          dataSelecionada = null;
+        } else {
+          dataSelecionada = diaStr;
+        }
+        
+        document.querySelectorAll('.filter-pill').forEach((btn) => btn.classList.remove('active'));
+        document.querySelector('.filter-pill').classList.add('active');
+        abaAtual = 'todas';
+        
+        renderizarCalendario();
+        renderizarLembretes();
       }
 
       /* --- OPERAÇÕES NO BANCO DE DADOS --- */
       async function salvarLembrete(e) {
         e.preventDefault();
-        const {
-          data: { user },
-        } = await _supabase.auth.getUser();
-
-        if (!user) {
-          alert('Sessão expirada. Faça login novamente.');
-          return;
-        }
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) return alert('Sessão expirada.');
 
         const id = document.getElementById('reminderId').value;
         const titulo = document.getElementById('reminderTitle').value;
@@ -634,26 +877,9 @@
         const urgente = document.getElementById('isUrgent').checked;
 
         if (id) {
-          const { error } = await _supabase
-            .from('reminders')
-            .update({ titulo, data, corpo, urgente })
-            .eq('id', id)
-            .eq('user_id', user.id);
-          if (error) console.error('Erro ao atualizar:', error.message);
+          await _supabase.from('reminders').update({ titulo, data, corpo, urgente }).eq('id', id).eq('user_id', user.id);
         } else {
-          const { error } = await _supabase
-            .from('reminders')
-            .insert([
-              {
-                titulo,
-                data,
-                corpo,
-                urgente,
-                concluido: false,
-                user_id: user.id,
-              },
-            ]);
-          if (error) console.error('Erro ao criar:', error.message);
+          await _supabase.from('reminders').insert([{ titulo, data, corpo, urgente, concluido: false, user_id: user.id }]);
         }
 
         fecharModalFormulario();
@@ -663,59 +889,49 @@
       async function toggleConcluido(id) {
         const item = lembretes.find((i) => String(i.id) === String(id));
         if (!item) return;
-
-        const { error } = await _supabase
-          .from('reminders')
-          .update({ concluido: !item.concluido })
-          .eq('id', id);
-
-        if (error) console.error('Erro ao alterar estado:', error.message);
-        else await carregarLembretesDoBanco();
+        await _supabase.from('reminders').update({ concluido: !item.concluido }).eq('id', id);
+        await carregarLembretesDoBanco();
       }
 
       async function toggleUrgente(id) {
         const item = lembretes.find((i) => String(i.id) === String(id));
         if (!item) return;
-
-        const { error } = await _supabase
-          .from('reminders')
-          .update({ urgente: !item.urgente })
-          .eq('id', id);
-
-        if (error) console.error('Erro ao alterar urgência:', error.message);
-        else await carregarLembretesDoBanco();
+        await _supabase.from('reminders').update({ urgente: !item.urgente }).eq('id', id);
+        await carregarLembretesDoBanco();
       }
 
       async function excluirLembrete(id) {
-        if (confirm('Confirma a remoção definitiva deste lembrete?')) {
-          const { error } = await _supabase
-            .from('reminders')
-            .delete()
-            .eq('id', id);
-
-          if (error) console.error('Erro ao excluir:', error.message);
-          else await carregarLembretesDoBanco();
+        if (confirm('Excluir este compromisso definitivamente?')) {
+          await _supabase.from('reminders').delete().eq('id', id);
+          await carregarLembretesDoBanco();
         }
       }
 
       function editarLembrete(id) {
         const item = lembretes.find((i) => String(i.id) === String(id));
         if (!item) return;
-
+        
         document.getElementById('reminderId').value = item.id;
         document.getElementById('reminderTitle').value = item.titulo;
         document.getElementById('dueDate').value = item.data;
         document.getElementById('reminderBody').value = item.corpo;
         document.getElementById('isUrgent').checked = item.urgente;
-        document.getElementById('modalFormTitle').innerText = 'Editar Lembrete';
+        document.getElementById('modalFormTitle').innerText = 'Editar Compromisso';
         document.getElementById('modalForm').classList.add('active');
       }
 
-      /* --- MODAIS DE SUPORTE --- */
+      /* --- MODAIS --- */
       function abrirModalFormulario() {
         document.getElementById('reminderForm').reset();
         document.getElementById('reminderId').value = '';
-        document.getElementById('modalFormTitle').innerText = 'Novo Lembrete';
+        document.getElementById('modalFormTitle').innerText = 'Novo Compromisso';
+        
+        if (dataSelecionada) {
+          document.getElementById('dueDate').value = dataSelecionada;
+        } else {
+          document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
+        }
+        
         document.getElementById('modalForm').classList.add('active');
       }
 
@@ -725,26 +941,16 @@
 
       function checarAlertasAoEntrar() {
         const hoje = new Date().toISOString().split('T')[0];
-        const alertas = lembretes.filter(
-          (i) => (i.data <= hoje || i.urgente) && !i.concluido
-        );
+        const alertas = lembretes.filter((i) => (i.data <= hoje || i.urgente) && !i.concluido);
 
         if (alertas.length > 0) {
           const body = document.getElementById('modalAlertBody');
-          body.innerHTML = alertas
-            .map(
-              (i) => `
-            <div style="background:#fff8f6; border-left:3px solid #dc2626; padding:10px 12px; margin-bottom:8px; border-radius:6px;">
-              <strong style="color:#1a1d24; font-size:0.875rem;">${
-                i.titulo
-              }</strong>
-              <div style="font-size:0.775rem; color:#64748b; margin-top:2px;">Vencimento: ${
-                i.data ? i.data.split('-').reverse().join('/') : 'Sem data'
-              }</div>
+          body.innerHTML = alertas.map((i) => `
+            <div style="background:#fff8f6; border-left:4px solid #dc2626; padding:12px 16px; margin-bottom:10px; border-radius:8px;">
+              <strong style="color:#1a1d24; font-size:0.9rem; display:block; margin-bottom:4px;">${i.titulo}</strong>
+              <div style="font-size:0.8rem; color:#64748b;">Vencimento: ${i.data ? i.data.split('-').reverse().join('/') : 'Sem data'}</div>
             </div>
-          `
-            )
-            .join('');
+          `).join('');
           document.getElementById('modalAlert').classList.add('active');
         }
       }
