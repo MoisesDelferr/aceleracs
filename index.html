@@ -1,830 +1,521 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Acelera CS</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth.js"></script>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      }
-      body {
-        background: #f5f6fa;
-        display: flex;
-        min-height: 100vh;
-        color: #1a1d24;
-      }
-      .main-content {
-        margin-left: 250px;
-        width: calc(100% - 250px);
-        min-height: 100vh;
-        padding: 24px 32px 40px;
-        display: flex;
-        flex-direction: column;
-        overflow-x: hidden;
-        transition: all 0.3s ease;
-      }
-      .container { width: 100%; max-width: 1180px; margin: 0 auto; }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cockpit - Acelera CS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif}
+:root{--roxo:#6226ef;--laranja:#ea580c;--amarelo:#d97706;--vermelho:#dc2626;--verde:#10b981;--azul:#0284c7;--texto:#1a1d24;--suave:#5a6072;--fraco:#8e94a8;--borda:#eceef3;--fundo:#f5f6fa;--pessego:#fdf0dc}
+body{background:var(--fundo);display:flex;min-height:100vh;color:var(--texto);font-size:14px}
+.main-content{margin-left:250px;width:calc(100% - 250px);min-height:100vh;padding:24px 32px 32px;display:flex;transition:all .3s ease}
+.container{width:100%;display:flex}
+.dashboard-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,24vw,440px);gap:24px;width:100%;align-items:start}
+.left-col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.panel-title{font-size:.95rem;font-weight:600;color:var(--laranja);margin-bottom:12px}
 
-      /* HERO */
-      .hero {
-        background: linear-gradient(135deg, #f3eeff 0%, #e8e0ff 50%, #fce8f3 100%);
-        border-radius: 24px;
-        padding: 32px 36px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 16px;
-      }
-      .hero::after {
-        content: '✨';
-        position: absolute;
-        font-size: 60px;
-        opacity: 0.1;
-        left: 45%;
-        top: 10px;
-        pointer-events: none;
-      }
-      .hero-text h1 {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #1a1d24;
-        letter-spacing: -0.6px;
-        margin-bottom: 6px;
-        position: relative;
-        z-index: 1;
-      }
-      .hero-text .date-line {
-        font-size: 0.92rem;
-        color: #6b5b8a;
-        font-weight: 500;
-        position: relative;
-        z-index: 1;
-      }
-      .hero-emoji {
-        font-size: 4.5rem;
-        line-height: 1;
-        position: relative;
-        z-index: 1;
-        filter: drop-shadow(0 4px 8px rgba(98, 38, 239, 0.15));
-      }
+/* HERO */
+.hero{background:linear-gradient(135deg,#8b5cf6,#6226ef);border-radius:24px;padding:26px 34px;position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;color:#fff;box-shadow:0 16px 32px -16px rgba(98,38,239,.5)}
+.hero::before{content:'';position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(255,255,255,.09);top:-150px;right:-90px}
+.hero-content{position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.18);margin-bottom:12px}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.3)}
+.hero h1{font-size:1.9rem;font-weight:600;letter-spacing:-.5px;margin-bottom:4px}
+.date-line{font-size:.9rem;color:rgba(255,255,255,.85)}
+.hero-message{margin-top:14px;font-size:.85rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:8px 14px;border-radius:10px;display:inline-block}
+.hero-message strong{font-weight:600}
+.hero-emoji{position:relative;z-index:1;font-size:4.5rem;line-height:1;filter:drop-shadow(0 8px 16px rgba(0,0,0,.15))}
 
-      /* GRID */
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-bottom: 20px;
-      }
-      @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+/* KPIs */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.kpi{border:1px solid var(--borda);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:14px}
+.kpi-value{font-size:1.9rem;font-weight:600;line-height:1;letter-spacing:-.5px;min-width:34px}
+.kpi-label{font-size:.68rem;font-weight:600;color:var(--suave);text-transform:uppercase;letter-spacing:.3px;display:block}
+.kpi-sub{font-size:.72rem;color:var(--fraco);margin-top:2px}
+.k-purple{background:linear-gradient(135deg,#fff,#f3edff)}.k-purple .kpi-value{color:var(--roxo)}
+.k-red{background:linear-gradient(135deg,#fff,#fef2f2)}.k-red .kpi-value{color:var(--vermelho)}
+.k-amber{background:linear-gradient(135deg,#fff,#fffbeb)}.k-amber .kpi-value{color:var(--amarelo)}
+.k-green{background:linear-gradient(135deg,#fff,#ecfdf5)}.k-green .kpi-value{color:var(--verde)}
+#kpiStatus{font-size:1.3rem}
 
-      /* CARDS */
-      .dash-card {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 22px 24px;
-        border: 1px solid #eef0f4;
-        transition: transform 0.2s, box-shadow 0.2s;
-        position: relative;
-        overflow: hidden;
-      }
-      .dash-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
-      }
-      .dash-card.card-purple { border-top: 4px solid #6226ef; }
-      .dash-card.card-orange { border-top: 4px solid #f59e0b; }
-      .dash-card.card-blue   { border-top: 4px solid #3b82f6; }
-      .dash-card.card-pink   { border-top: 4px solid #ec4899; }
-      .dash-card.card-green  { border-top: 4px solid #10b981; }
+/* FOCO DO DIA */
+.focus{display:grid;grid-template-columns:1fr 1.3fr;gap:16px;flex:1;min-height:340px}
+.dash-card{background:#fff;border-radius:20px;padding:20px;border:1px solid var(--borda);display:flex;flex-direction:column;min-height:0}
+.dash-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:10px}
+.dash-card-header h2{font-size:1rem;font-weight:600}
+.dash-card-header p{font-size:.75rem;color:var(--fraco);margin-top:2px}
+.count-badge{color:#fff;font-size:.75rem;font-weight:600;min-width:28px;text-align:center;padding:4px 10px;border-radius:20px}
+.card-purple .count-badge{background:var(--roxo)}.card-orange .count-badge{background:var(--laranja)}
+.dash-list{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;padding-right:2px}
+.group-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--fraco);margin:6px 0 0;display:flex;align-items:center;gap:6px}
+.group-label:first-child{margin-top:0}
+.group-label i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border-left:4px solid var(--borda);background:#fafbfd}
+.item-main{flex:1;min-width:0}
+.item-title{font-weight:500;font-size:.9rem;line-height:1.3}
+.item-sub{font-size:.75rem;color:var(--fraco);margin-top:2px}
+.item.lembrete{background:#f7f3ff;border-left-color:var(--roxo)}
+.item.lembrete.urg{background:#fef2f2;border-left-color:var(--vermelho)}
+.item.sol-3{background:#fef2f2;border-left-color:var(--vermelho)}
+.item.sol-2{background:#fff7ed;border-left-color:var(--laranja)}
+.item.sol-1{background:#fffbeb;border-left-color:var(--amarelo)}
+.badge{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.3px;padding:4px 10px;border-radius:20px;white-space:nowrap;color:#fff}
+.b-roxo{background:var(--roxo)}.b-red{background:var(--vermelho)}.b-orange{background:var(--laranja)}.b-amber{background:var(--amarelo)}
+.btn-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--roxo);background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:transparent;font-size:.7rem;transition:.15s}
+.btn-check:hover{background:var(--roxo);color:#fff}
+.empty{text-align:center;color:var(--fraco);font-size:.85rem;padding:24px 10px;margin:auto}
+.empty b{display:block;font-size:1.6rem;margin-bottom:6px}
 
-      .dash-card-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 16px;
-      }
-      .dash-card-header .icon-wrap {
-        width: 36px; height: 36px;
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem; flex-shrink: 0;
-      }
-      .icon-wrap.purple { background: #f5f0ff; }
-      .icon-wrap.orange { background: #fffbeb; }
-      .icon-wrap.blue   { background: #eff6ff; }
-      .icon-wrap.pink   { background: #fdf2f8; }
-      .icon-wrap.green  { background: #ecfdf5; }
+/* NOTÍCIAS */
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.news-tile{display:flex;flex-direction:column;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--borda);cursor:pointer;transition:.2s}
+.news-tile:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,.08)}
+.news-tile-image{height:100px;background:var(--fundo);position:relative}
+.news-tile-image img{width:100%;height:100%;object-fit:cover}
+.image-fallback{height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:.3}
+.news-tile-tag{position:absolute;top:8px;left:8px;font-size:.58rem;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:#fff;color:var(--verde)}
+.news-tile-body{padding:12px;display:flex;flex-direction:column;gap:8px;flex:1}
+.news-tile-title{font-size:.8rem;font-weight:600;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news-tile-footer{display:flex;align-items:center;gap:4px;font-size:.68rem;color:var(--fraco);margin-top:auto}
 
-      .dash-card-header h2 {
-        font-size: 0.98rem; font-weight: 700;
-        color: #1a1d24; letter-spacing: -0.2px;
-      }
-      .dash-card-header .count-badge {
-        margin-left: auto; background: #1a1d24; color: #fff;
-        font-size: 0.7rem; font-weight: 700;
-        padding: 3px 12px; border-radius: 20px;
-      }
+/* PAINEL PÊSSEGO */
+.right-sidebar{
+  position:sticky;
+  top:24px;
+  align-self:start;
+  background:var(--pessego);
+  border-radius:28px;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  border:1px solid #f7e2bd;
+  /* NOVAS REGRAS PARA SCROLL INDEPENDENTE */
+  max-height:calc(100vh - 48px);
+  overflow-y:auto;
+  scrollbar-width:none; /* Firefox */
+}
+.right-sidebar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
 
-      /* LISTAS */
-      .dash-list { display: flex; flex-direction: column; gap: 8px; }
-      .dash-list-item {
-        display: flex; align-items: center; gap: 10px;
-        padding: 11px 14px; background: #fafbfd;
-        border-radius: 12px; font-size: 0.86rem;
-        color: #1a1d24; border-left: 4px solid #eef0f4;
-        transition: background 0.15s;
-      }
-      .dash-list-item:hover { background: #f5f6fa; }
-      .dash-list-item.urgent    { border-left-color: #dc2626; background: #fef2f2; }
-      .dash-list-item.warning   { border-left-color: #f59e0b; background: #fffbeb; }
-      .dash-list-item.attention { border-left-color: #ea580c; background: #fff7ed; }
-      .dash-list-item .item-title { font-weight: 600; flex: 1; line-height: 1.3; }
-      .dash-list-item .item-meta {
-        font-size: 0.7rem; color: #8e94a8;
-        white-space: nowrap; font-weight: 500;
-      }
-      .dash-empty {
-        text-align: center; padding: 28px 12px;
-        color: #a2a8bb; font-size: 0.84rem; line-height: 1.5;
-      }
+.side-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.side-head h3{font-size:.9rem;font-weight:600}
+.side-head small{display:block;font-size:.7rem;color:var(--fraco)}
+.weather-card,.quote-card,.quick-tasks-card{background:#fff;border-radius:18px;padding:16px}
+.weather-main{display:flex;align-items:center;gap:14px}
+.w-icon{font-size:2.6rem;line-height:1}
+.w-temp{font-size:1.8rem;font-weight:600;line-height:1;letter-spacing:-.5px}
+.w-desc{font-size:.85rem;color:var(--suave);margin-top:3px}
+.w-details{font-size:.72rem;color:var(--fraco);margin-top:1px}
+.rain-alert{margin-top:12px;padding:9px 12px;border-radius:10px;font-size:.8rem;font-weight:500}
+.rain-alert.wet{background:#e0f2fe;color:#075985}.rain-alert.dry{background:#ecfdf5;color:#047857}
+.weather-forecast{display:flex;gap:8px;margin-top:10px}
+.forecast-item{flex:1;display:flex;flex-direction:column;gap:3px;border-radius:12px;padding:10px 12px;border:1px solid var(--borda)}
+.forecast-item.wet{background:#f0f9ff;border-color:#bae6fd}.forecast-item.dry{background:#f7fdf9;border-color:#d1fae5}
+.f-label{font-size:.7rem;color:var(--fraco);font-weight:500}
+.f-val{font-size:.95rem;font-weight:600}
+.f-rain{font-size:.75rem;font-weight:500}
+.wet .f-rain{color:var(--azul)}.dry .f-rain{color:#059669}
+.quote-card{background:#f5f0ff;border:1px solid #e2d9ff}
+.quote-card h3{color:var(--roxo)}
+.quote-text{font-size:.85rem;font-style:italic;line-height:1.5;margin-bottom:6px}
+.quote-author{font-size:.75rem;font-weight:600;color:var(--roxo)}
 
-      /* CLIMA */
-      .weather-card { display: flex; align-items: flex-start; gap: 18px; }
-      .weather-icon { font-size: 3rem; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08)); }
-      .weather-info { flex: 1; }
-      .weather-info .temp { font-size: 1.7rem; font-weight: 800; color: #1a1d24; letter-spacing: -0.5px; }
-      .weather-info .desc { font-size: 0.86rem; color: #5a6072; margin-top: 2px; font-weight: 500; }
-      .weather-info .location { font-size: 0.74rem; color: #8e94a8; margin-top: 4px; }
-      .weather-forecast {
-        margin-top: 12px; padding-top: 12px;
-        border-top: 1px dashed #e4e6f1;
-        font-size: 0.83rem; color: #3d4351;
-        display: flex; flex-direction: column; gap: 8px;
-      }
-      .weather-forecast div {
-        display: flex; align-items: center; gap: 8px;
-        background: #fafbfd; padding: 8px 12px; border-radius: 10px;
-      }
+/* TASKS */
+.quick-tasks-card{display:flex;flex-direction:column}
+.qt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.qt-head h3{font-size:.95rem;font-weight:600;color:var(--roxo)}
+.qt-meta{font-size:.72rem;color:var(--fraco)}
+.qt-add{display:flex;gap:8px;margin-bottom:12px}
+.qt-add input{flex:1;padding:11px 14px;border:1.5px solid var(--borda);border-radius:12px;outline:none;font-size:.85rem;background:var(--fundo);transition:.15s}
+.qt-add input:focus{border-color:var(--laranja);background:#fff;box-shadow:0 0 0 3px rgba(234,88,12,.12)}
+.qt-add button{background:var(--laranja);color:#fff;border:none;width:42px;border-radius:12px;font-size:1.2rem;cursor:pointer;transition:.15s}
+.qt-add button:hover{background:#c2410c}
+.quick-task-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:320px}
+.quick-task-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f5f0ff;border-radius:10px;font-size:.85rem}
+.quick-task-item.done{background:#f6f7fa}
+.quick-task-item.done .quick-task-title{text-decoration:line-through;color:var(--fraco)}
+.quick-task-check{width:18px;height:18px;border-radius:6px;border:2px solid var(--roxo);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.quick-task-item.done .quick-task-check{background:var(--verde);border-color:var(--verde)}
+.quick-task-title{flex:1;font-weight:500;color:var(--roxo)}
+.btn-del-task{background:none;border:none;cursor:pointer;color:var(--fraco);padding:2px;opacity:.6}
+.btn-del-task:hover{color:var(--vermelho);opacity:1}
+.btn-clear{background:none;border:none;color:var(--fraco);font-size:.72rem;cursor:pointer;margin-top:8px;align-self:flex-start}
+.btn-clear:hover{color:var(--vermelho)}
 
-      /* FRASE */
-      .quote-card { background: linear-gradient(145deg, #faf5ff, #f3e8ff); border-color: #e9d5ff; }
-      .quote-card .quote-text {
-        font-size: 1rem; font-style: italic;
-        color: #1a1d24; line-height: 1.7;
-        margin-bottom: 10px; font-weight: 500;
-      }
-      .quote-card .quote-author { font-size: 0.82rem; color: #7c3aed; font-weight: 700; }
+/* MODAL */
+.news-modal-overlay{position:fixed;inset:0;background:rgba(15,18,28,.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s;padding:20px}
+.news-modal-overlay.active{opacity:1;pointer-events:all}
+.news-modal{background:#fff;border-radius:24px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:32px}
+.news-modal h3{font-size:1.2rem;font-weight:600;margin-bottom:10px;line-height:1.4}
+.modal-source{font-size:.8rem;color:var(--fraco);margin-bottom:18px}
+.modal-summary{font-size:.9rem;color:var(--suave);line-height:1.7;margin-bottom:24px;padding:18px;background:#f8f9fc;border-radius:14px;border-left:4px solid var(--roxo)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.btn-modal-news{padding:11px 24px;border-radius:12px;font-weight:600;cursor:pointer;border:none;font-size:.85rem}
+.btn-news-close{background:#f1f2f7;color:var(--suave)}.btn-news-open{background:var(--roxo);color:#fff}
+.loading-text{text-align:center;color:var(--fraco);font-size:.8rem;padding:14px}
 
-      /* ===================================================== */
-      /* NOTÍCIAS — NOVO VISUAL                                */
-      /* ===================================================== */
-      .news-card {
-        grid-column: 1 / -1;
-        border-top: 4px solid #0ea5e9;
-      }
+@media(max-width:1100px){.dashboard-layout{grid-template-columns:1fr}.right-sidebar{position:static;max-height:none;overflow-y:visible}}
+@media(max-width:900px){.focus{grid-template-columns:1fr}}
+@media(max-width:768px){.main-content{margin-left:0;width:100%;padding:16px}.hero{flex-direction:column;align-items:flex-start;gap:12px}.news-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="sidebar-container"></div>
+<main class="main-content" id="mainContent">
+<div class="container"><div class="dashboard-layout">
 
-      .news-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 16px;
-      }
+  <div class="left-col">
+    <header class="hero">
+      <div class="hero-content">
+        <h1 id="greetingText">Bom dia, Moisa!</h1>
+        <p class="date-line" id="dateLine"></p>
+        <div class="hero-message" id="heroMessage">Carregando...</div>
+      </div>
+      <div class="hero-emoji" id="heroEmoji">☀️</div>
+    </header>
 
-      .news-tile {
-        display: flex;
-        flex-direction: column;
-        background: #ffffff;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #eef0f4;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-        position: relative;
-      }
+    <section>
+      <div class="kpi-strip">
+        <div class="kpi k-purple"><div class="kpi-value" id="kpiLembretes">—</div><div><span class="kpi-label">Lembretes em aberto</span><div class="kpi-sub">Para hoje</div></div></div>
+        <div class="kpi k-red"><div class="kpi-value" id="kpiCriticas">—</div><div><span class="kpi-label">Solicitações críticas</span><div class="kpi-sub">Sem retorno / efetivação</div></div></div>
+        <div class="kpi k-amber"><div class="kpi-value" id="kpiAtencao">—</div><div><span class="kpi-label">Aguardando retorno</span><div class="kpi-sub">1º dia sem retorno</div></div></div>
+        <div class="kpi k-green"><div class="kpi-value" id="kpiStatus">—</div><div><span class="kpi-label">Status do dia</span><div class="kpi-sub" id="kpiStatusSub"></div></div></div>
+      </div>
+    </section>
 
-      .news-tile:hover {
-        transform: translateY(-4px);
-        border-color: #bae6fd;
-        box-shadow: 0 16px 32px rgba(14, 165, 233, 0.12);
-      }
-
-      .news-tile:hover .news-tile-image img {
-        transform: scale(1.06);
-      }
-
-      .news-tile-image {
-        width: 100%;
-        height: 130px;
-        overflow: hidden;
-        background: linear-gradient(135deg, #e0f2fe, #bae6fd);
-        position: relative;
-        flex-shrink: 0;
-      }
-
-      .news-tile-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: transform 0.4s ease;
-      }
-
-      .news-tile-image .image-fallback {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.2rem;
-        color: #0284c7;
-        opacity: 0.5;
-      }
-
-      .news-tile-tag {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        font-size: 0.62rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        padding: 4px 10px;
-        border-radius: 8px;
-        backdrop-filter: blur(6px);
-        background: rgba(255, 255, 255, 0.9);
-      }
-      .news-tile-tag.tag-brasil { color: #166534; }
-      .news-tile-tag.tag-mundo  { color: #1e40af; }
-
-      .news-tile-body {
-        padding: 14px 16px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        flex: 1;
-      }
-
-      .news-tile-title {
-        font-size: 0.86rem;
-        font-weight: 700;
-        line-height: 1.35;
-        color: #1a1d24;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .news-tile-footer {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.7rem;
-        color: #8e94a8;
-        margin-top: auto;
-        padding-top: 6px;
-      }
-
-      .news-tile-footer svg {
-        width: 12px;
-        height: 12px;
-        stroke: currentColor;
-        fill: none;
-        stroke-width: 2;
-        flex-shrink: 0;
-      }
-
-      .news-tile-footer .dot {
-        width: 3px;
-        height: 3px;
-        border-radius: 50%;
-        background: #cbd5e1;
-      }
-
-      /* MODAL NOTÍCIA */
-      .news-modal-overlay {
-        position: fixed; inset: 0;
-        background: rgba(15, 18, 28, 0.5);
-        backdrop-filter: blur(6px);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 2000; opacity: 0; pointer-events: none;
-        transition: opacity 0.25s; padding: 20px;
-      }
-      .news-modal-overlay.active { opacity: 1; pointer-events: all; }
-      .news-modal {
-        background: #fff; border-radius: 20px;
-        max-width: 560px; width: 100%; max-height: 80vh;
-        overflow-y: auto; padding: 28px 30px;
-        box-shadow: 0 24px 48px rgba(0,0,0,0.15);
-        transform: translateY(12px) scale(0.97);
-        transition: transform 0.25s;
-      }
-      .news-modal-overlay.active .news-modal { transform: translateY(0) scale(1); }
-      .news-modal h3 { font-size: 1.15rem; font-weight: 700; color: #1a1d24; margin-bottom: 12px; line-height: 1.4; }
-      .news-modal .modal-source { font-size: 0.78rem; color: #8e94a8; margin-bottom: 16px; font-weight: 500; }
-      .news-modal .modal-summary {
-        font-size: 0.9rem; color: #3d4351; line-height: 1.7;
-        margin-bottom: 20px; padding: 16px; background: #f8f9fc;
-        border-radius: 12px; border-left: 4px solid #6226ef;
-      }
-      .news-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-      .btn-modal-news {
-        padding: 10px 22px; border-radius: 10px;
-        font-size: 0.85rem; font-weight: 600;
-        cursor: pointer; border: none; transition: all 0.2s;
-      }
-      .btn-news-close { background: #f1f2f7; color: #5a6072; }
-      .btn-news-close:hover { background: #e4e6f1; }
-      .btn-news-open { background: #6226ef; color: #fff; }
-      .btn-news-open:hover { background: #501fc7; }
-
-      .loading-text { text-align: center; color: #a2a8bb; font-size: 0.84rem; padding: 20px; }
-
-      @media (max-width: 768px) {
-        .main-content { margin-left: 0; width: 100%; padding: 16px; }
-        .hero { padding: 24px; border-radius: 18px; }
-        .hero-text h1 { font-size: 1.4rem; }
-        .hero-emoji { font-size: 3rem; }
-        .weather-card { flex-direction: column; gap: 10px; }
-        .news-grid { grid-template-columns: 1fr; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="sidebar-container"></div>
-
-    <main class="main-content" id="mainContent">
-      <div class="container">
-        <div class="hero">
-          <div class="hero-text">
-            <h1 id="greetingText">Bom dia, Moisa! ☀️</h1>
-            <p class="date-line" id="dateLine">Hoje é quarta-feira (04/11/2026)</p>
+    <section style="display:flex;flex-direction:column;flex:1">
+      <h2 class="panel-title">Foco do dia</h2>
+      <div class="focus">
+        <div class="dash-card card-purple">
+          <div class="dash-card-header">
+            <div><h2>Lembretes de Hoje</h2><p>Clique no círculo para concluir</p></div>
+            <span class="count-badge" id="remindersCount">0</span>
           </div>
-          <div class="hero-emoji" id="heroEmoji">☀️</div>
+          <div class="dash-list" id="remindersList"><div class="loading-text">Carregando...</div></div>
         </div>
-
-        <div class="dashboard-grid">
-          <div class="dash-card card-purple">
-            <div class="dash-card-header">
-              <div class="icon-wrap purple">📋</div>
-              <h2>Lembretes de Hoje</h2>
-              <span class="count-badge" id="remindersCount">0</span>
-            </div>
-            <div class="dash-list" id="remindersList">
-              <div class="loading-text">Carregando...</div>
-            </div>
+        <div class="dash-card card-orange">
+          <div class="dash-card-header">
+            <div><h2>Solicitações com Atenção</h2><p>Ordenadas da mais urgente para a menos urgente</p></div>
+            <span class="count-badge" id="solicitacoesCount">0</span>
           </div>
-
-          <div class="dash-card card-orange">
-            <div class="dash-card-header">
-              <div class="icon-wrap orange">⚠️</div>
-              <h2>Solicitações com Atenção</h2>
-              <span class="count-badge" id="solicitacoesCount">0</span>
-            </div>
-            <div class="dash-list" id="solicitacoesList">
-              <div class="loading-text">Carregando...</div>
-            </div>
-          </div>
-
-          <div class="dash-card card-blue">
-            <div class="dash-card-header">
-              <div class="icon-wrap blue">🌤️</div>
-              <h2>Previsão do Tempo</h2>
-            </div>
-            <div class="weather-card" id="weatherContent">
-              <div class="loading-text">Carregando previsão...</div>
-            </div>
-          </div>
-
-          <div class="dash-card quote-card">
-            <div class="dash-card-header">
-              <div class="icon-wrap pink">💬</div>
-              <h2>Frase do Dia</h2>
-            </div>
-            <div id="quoteContent">
-              <div class="loading-text">Carregando frase...</div>
-            </div>
-          </div>
-
-          <div class="dash-card news-card">
-            <div class="dash-card-header">
-              <div class="icon-wrap green">📰</div>
-              <h2>Notícias do Dia</h2>
-            </div>
-            <div class="news-grid" id="newsList">
-              <div class="loading-text">Carregando notícias...</div>
-            </div>
-          </div>
+          <div class="dash-list" id="solicitacoesList"><div class="loading-text">Carregando...</div></div>
         </div>
       </div>
-    </main>
+    </section>
 
-    <div class="news-modal-overlay" id="newsModal">
-      <div class="news-modal">
-        <h3 id="newsModalTitle">Título</h3>
-        <div class="modal-source" id="newsModalSource">Fonte</div>
-        <div class="modal-summary" id="newsModalSummary">Resumo...</div>
-        <div class="modal-actions">
-          <button class="btn-modal-news btn-news-close" onclick="fecharModalNoticia()">Fechar</button>
-          <button class="btn-modal-news btn-news-open" id="newsModalOpenBtn">Ler notícia completa</button>
-        </div>
-      </div>
+    <section>
+      <h2 class="panel-title">Notícias do dia</h2>
+      <div class="news-grid" id="newsList"><div class="loading-text">Carregando notícias...</div></div>
+    </section>
+  </div>
+
+  <aside class="right-sidebar">
+    <div class="weather-card">
+      <div class="side-head"><span></span><div><h3>Previsão do Tempo</h3><small>Vinhedo · SP</small></div></div>
+      <div class="weather-main" id="weatherMainContent"><div class="loading-text">Carregando...</div></div>
+      <div id="rainAlert"></div>
+      <div class="weather-forecast" id="weatherForecastContent" style="display:none"></div>
     </div>
+    
+    <div class="quick-tasks-card">
+      <div class="qt-head"><h3>Tasks rápidas</h3><span class="qt-meta" id="qtMeta"></span></div>
+      <div class="qt-add">
+        <input type="text" id="quickTaskInput" placeholder="Nova tarefa e Enter..." maxlength="120" autocomplete="off">
+        <button onclick="adicionarQuickTask()" title="Adicionar">+</button>
+      </div>
+      <div class="quick-task-list" id="quickTaskList"></div>
+      <button class="btn-clear" id="btnClear" onclick="limparConcluidas()" style="display:none">Limpar concluídas</button>
+    </div>
+    <div class="quote-card">
+      <div class="side-head"><span>💬</span><div><h3>Frase do Dia</h3><small>Uma dose de motivação</small></div></div>
+      <div id="quoteContent"><div class="loading-text">Carregando...</div></div>
+    </div>
+  </aside>
 
-    <script src="sidebar.js"></script>
-    <script>
-      // ============================================================
-      // CONFIGURAÇÃO
-      // ============================================================
-      const VINHEDO_LAT = -23.03;
-      const VINHEDO_LON = -46.98;
+</div></div>
+</main>
 
-      const FEEDS = [
-        { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml', tag: 'Brasil' },
-        { url: 'https://g1.globo.com/rss/g1/', tag: 'Brasil' },
-        { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', tag: 'Mundo' },
-        { url: 'https://feeds.bbci.co.uk/news/rss.xml', tag: 'Mundo' },
-      ];
+<div class="news-modal-overlay" id="newsModal">
+  <div class="news-modal">
+    <h3 id="newsModalTitle"></h3>
+    <div class="modal-source" id="newsModalSource"></div>
+    <div class="modal-summary" id="newsModalSummary"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-news btn-news-close" onclick="fecharModalNoticia()">Fechar</button>
+      <button class="btn-modal-news btn-news-open" id="newsModalOpenBtn">Ler notícia completa</button>
+    </div>
+  </div>
+</div>
 
-      const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+<script src="sidebar.js"></script>
+<script>
+const VINHEDO_LAT=-23.03, VINHEDO_LON=-46.98;
+const FEEDS=[
+  {url:'https://ge.globo.com/rss/ge/',tag:'Futebol',prioridade:1},
+  {url:'https://g1.globo.com/rss/g1/politica/',tag:'Política',prioridade:1},
+  {url:'https://g1.globo.com/rss/g1/economia/',tag:'Economia',prioridade:2},
+  {url:'https://feeds.bbci.co.uk/portuguese/rss.xml',tag:'Brasil',prioridade:2},
+];
+const RSS2JSON='https://api.rss2json.com/v1/api.json?rss_url=';
+const PALAVRAS_RELEVANTES=['flamengo','corinthians','palmeiras','são paulo','santos','grêmio','internacional','cruzeiro','atlético','botafogo','fluminense','vasco','brasileirão','copa do brasil','seleção','futebol','gol','campeonato','libertadores','neymar','vini jr','endrick','lula','bolsonaro','congresso','senado','câmara','stf','governo','ministro','eleição','política','deputado','senador','pt ','pl ','psdb','mdb','economia','selic','inflação','dólar','ibovespa','banco central','copom','brasil','brasileiro','nacional','país','congresso nacional','planalto'];
+const PALAVRAS_BLOQUEADAS=['fofoca','celebridade','bbb','reality show','namoro','casamento','separação','famoso','influencer','instagram','tiktok','moda','beleza','horóscopo','a fazenda','power couple','carnaval'];
 
-      let supabaseClient = null;
-      let noticiasCache = [];
+let supabaseClient=null, noticiasCache=[], totalLembretesAbertos=0, totalCriticasAbertas=0, totalAtencaoAbertas=0;
 
-      // ============================================================
-      // INICIALIZAÇÃO
-      // ============================================================
-      document.addEventListener('DOMContentLoaded', async function () {
-        try {
-          if (typeof _supabase !== 'undefined') {
-            supabaseClient = _supabase;
-          } else if (
-            typeof supabase !== 'undefined' &&
-            typeof supabase.createClient === 'function'
-          ) {
-            const SUPABASE_URL = 'https://pgsjhesbgqcqilkxfzed.supabase.co';
-            const SUPABASE_ANON_KEY =
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnc2poZXNiZ3FjcWlsa3hmemVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNjkwMjQsImV4cCI6MjEwMDc0NTAyNH0.YmZ41BDMU_cafyTOInh-R4aSotvXnnWXCuPqorsfxqg';
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          }
+// data local (evita virar o dia por causa do UTC)
+// acompanha a largura real da sidebar (aberta ou recolhida) para não sobrar espaço
+function ajustarLargura(){
+  const main=document.getElementById('mainContent');
+  if(window.innerWidth<=768){main.style.marginLeft='0';main.style.width='100%';return}
+  const sb=document.querySelector('#sidebar-container > *');
+  const w=sb?Math.round(sb.getBoundingClientRect().width):0;
+  if(w>0){main.style.marginLeft=w+'px';main.style.width=`calc(100% - ${w}px)`}
+}
+window.addEventListener('resize',ajustarLargura);
+window.addEventListener('load',()=>{
+  ajustarLargura();
+  const sb=document.querySelector('#sidebar-container > *');
+  if(sb&&window.ResizeObserver)new ResizeObserver(ajustarLargura).observe(sb);
+  setTimeout(ajustarLargura,500);
+});
 
-          const { data: { session } } = await supabaseClient.auth.getSession();
-          if (!session) {
-            window.location.href = 'login.html';
-            return;
-          }
+function hojeLocal(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
-          renderizarSaudacao();
-          carregarLembretesDoDia();
-          carregarSolicitacoesAtencao();
-          carregarClima();
-          carregarFraseMotivacional();
-          carregarNoticias();
-        } catch (err) {
-          console.error('Erro na inicialização:', err);
-        }
+document.addEventListener('DOMContentLoaded',async()=>{
+  try{
+    if(typeof _supabase!=='undefined'){supabaseClient=_supabase}
+    else if(typeof supabase!=='undefined'&&typeof supabase.createClient==='function'){
+      supabaseClient=supabase.createClient('https://pgsjhesbgqcqilkxfzed.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnc2poZXNiZ3FjcWlsa3hmemVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNjkwMjQsImV4cCI6MjEwMDc0NTAyNH0.YmZ41BDMU_cafyTOInh-R4aSotvXnnWXCuPqorsfxqg');
+    }
+    const {data:{session}}=await supabaseClient.auth.getSession();
+    if(!session){window.location.href='login.html';return}
+    renderizarSaudacao();
+    carregarLembretesDoDia();
+    carregarSolicitacoesAtencao();
+    carregarClima();
+    carregarFraseMotivacional();
+    carregarNoticias();
+    renderizarQuickTasks();
+    document.getElementById('quickTaskInput').addEventListener('keydown',e=>{if(e.key==='Enter')adicionarQuickTask()});
+  }catch(err){console.error('Erro na inicialização:',err)}
+});
+
+function renderizarSaudacao(){
+  const a=new Date(),h=a.getHours();
+  let s='Bom dia',e='☀️';
+  if(h>=12&&h<18){s='Boa tarde';e='⛅'}else if(h>=18){s='Boa noite';e='🌙'}
+  document.getElementById('greetingText').textContent=`${s}, Moisa!`;
+  document.getElementById('heroEmoji').textContent=e;
+  const d=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  document.getElementById('dateLine').textContent=`Hoje é ${d[a.getDay()]} (${String(a.getDate()).padStart(2,'0')}/${String(a.getMonth()+1).padStart(2,'0')}/${a.getFullYear()})`;
+}
+
+function atualizarMensagemHero(l,c){
+  const m=document.getElementById('heroMessage');
+  if(l===0&&c===0){m.innerHTML='Tudo tranquilo por aqui — <strong>nenhuma pendência em aberto</strong>. Aproveite o dia!';return}
+  const p=[];
+  if(l>0)p.push(`<strong>${l}</strong> lembrete${l>1?'s':''}`);
+  if(c>0)p.push(`<strong>${c}</strong> solicitaç${c>1?'ões':'ão'} crítica${c>1?'s':''}`);
+  m.innerHTML=`Você tem ${p.join(' e ')} para tratar hoje. Bora resolver!`;
+}
+
+async function carregarLembretesDoDia(){
+  const box=document.getElementById('remindersList');
+  try{
+    const {data:{user}}=await supabaseClient.auth.getUser(); if(!user)return;
+    const {data,error}=await supabaseClient.from('reminders').select('*').eq('user_id',user.id).eq('data',hojeLocal()).eq('concluido',false).order('urgente',{ascending:false});
+    if(error)throw error;
+    const l=data||[]; totalLembretesAbertos=l.length;
+    document.getElementById('remindersCount').textContent=l.length;
+    document.getElementById('kpiLembretes').textContent=l.length;
+    box.innerHTML=l.length===0
+      ? '<div class="empty"><b>✅</b>Nenhum lembrete em aberto para hoje.</div>'
+      : l.map(i=>`<div class="item lembrete ${i.urgente?'urg':''}">
+          <button class="btn-check" title="Concluir" onclick="concluirLembrete('${i.id}')">✓</button>
+          <div class="item-main"><div class="item-title">${escapeHtml(i.titulo)}</div></div>
+          <span class="badge ${i.urgente?'b-red':'b-roxo'}">${i.urgente?'⚡ Urgente':'Em aberto'}</span>
+        </div>`).join('');
+    atualizarMensagemHero(totalLembretesAbertos,totalCriticasAbertas);
+  }catch(e){console.error(e);box.innerHTML='<div class="empty">Erro ao carregar lembretes.</div>'}
+}
+
+async function concluirLembrete(id){
+  try{
+    const {error}=await supabaseClient.from('reminders').update({concluido:true}).eq('id',id);
+    if(error)throw error;
+    carregarLembretesDoDia();
+  }catch(e){console.error(e);alert('Não foi possível concluir o lembrete.')}
+}
+
+async function carregarSolicitacoesAtencao(){
+  const box=document.getElementById('solicitacoesList');
+  try{
+    const {data:{user}}=await supabaseClient.auth.getUser(); if(!user)return;
+    const {data,error}=await supabaseClient.from('solicitacoes').select('*').eq('user_id',user.id).neq('status','Concluída');
+    if(error)throw error;
+    const hoje=hojeLocal();
+    const efetivaHoje=s=>s.tipo_solicitacao==='Cancelamento'&&s.data_efetivacao&&String(s.data_efetivacao).slice(0,10)===hoje;
+    const nivel=s=>(s.status==='Atenção'||efetivaHoje(s))?3:s.status==='Sem Retorno 2° Dia'?2:s.status==='Sem Retorno 1° Dia'?1:0;
+    const atencao=(data||[]).filter(s=>nivel(s)>0).sort((a,b)=>nivel(b)-nivel(a));
+    document.getElementById('solicitacoesCount').textContent=atencao.length;
+    totalCriticasAbertas=atencao.filter(s=>nivel(s)>=2).length;
+    totalAtencaoAbertas=atencao.filter(s=>nivel(s)===1).length;
+    document.getElementById('kpiCriticas').textContent=totalCriticasAbertas;
+    document.getElementById('kpiAtencao').textContent=totalAtencaoAbertas;
+
+    const st=document.getElementById('kpiStatus'),ss=document.getElementById('kpiStatusSub');
+    if(totalCriticasAbertas>0){st.textContent='Atenção';st.style.color='var(--vermelho)';ss.textContent='Priorize os críticos'}
+    else if(totalAtencaoAbertas>0){st.textContent='Em dia';st.style.color='var(--amarelo)';ss.textContent='Nada crítico'}
+    else{st.textContent='Tranquilo';st.style.color='var(--verde)';ss.textContent='Tudo sob controle'}
+
+    if(!atencao.length){
+      box.innerHTML='<div class="empty"><b></b>Nenhuma solicitação precisando de atenção.</div>';
+    }else{
+      const grupos=[[3,'Crítico','var(--vermelho)'],[2,'Atenção — 2º dia','var(--laranja)'],[1,'Aguardando — 1º dia','var(--amarelo)']];
+      box.innerHTML=grupos.map(([n,nome,cor])=>{
+        const its=atencao.filter(s=>nivel(s)===n); if(!its.length)return '';
+        return `<div class="group-label"><i style="background:${cor}"></i>${nome} · ${its.length}</div>`+its.map(s=>{
+          const bc=n===3?'b-red':n===2?'b-orange':'b-amber';
+          const bt=efetivaHoje(s)?'Efetiva hoje':n===3?'3º dia':n===2?'2º dia':'1º dia';
+          const sub=[s.protocolo,s.tipo_solicitacao].filter(Boolean).map(escapeHtml).join(' · ');
+          return `<div class="item sol-${n}"><div class="item-main"><div class="item-title">${escapeHtml(s.nome_cliente)}</div><div class="item-sub">${sub}</div></div><span class="badge ${bc}">${bt}</span></div>`;
+        }).join('');
+      }).join('');
+    }
+    atualizarMensagemHero(totalLembretesAbertos,totalCriticasAbertas);
+  }catch(e){console.error(e);box.innerHTML='<div class="empty">Erro ao carregar solicitações.</div>'}
+}
+
+// ---------- CLIMA ----------
+async function carregarClima(){
+  const main=document.getElementById('weatherMainContent'),fc=document.getElementById('weatherForecastContent'),alerta=document.getElementById('rainAlert');
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${VINHEDO_LAT}&longitude=${VINHEDO_LON}&current=temperature_2m,relative_humidity_2m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability,precipitation&daily=temperature_2m_max,temperature_2m_min&timezone=America/Sao_Paulo&forecast_days=1`;
+    const r=await fetch(url); if(!r.ok)throw new Error('Falha na API de clima');
+    const d=await r.json(),c=d.current,h=d.hourly;
+    const info=obterIconeClima(c.weather_code);
+    main.innerHTML=`<div class="w-icon">${info.icone}</div><div><div class="w-temp">${Math.round(c.temperature_2m)}°C</div><div class="w-desc">${info.descricao}</div><div class="w-details">Máx ${Math.round(d.daily.temperature_2m_max[0])}° / Mín ${Math.round(d.daily.temperature_2m_min[0])}° · Umidade ${c.relative_humidity_2m}%</div></div>`;
+
+    // chuva: média da janela de 1h antes até 1h depois do horário
+    const janela=hora=>{
+      const i=h.time.findIndex(t=>t.includes(`T${hora}:00`)); if(i<0)return null;
+      const idx=[i-1,i,i+1].filter(k=>k>=0&&k<h.time.length);
+      const prob=Math.max(...idx.map(k=>h.precipitation_probability[k]||0));
+      const mm=idx.reduce((s,k)=>s+(h.precipitation[k]||0),0);
+      return {temp:Math.round(h.temperature_2m[i]),icone:obterIconeClima(h.weather_code[i]).icone,prob,mm,chove:prob>=40||mm>=0.3};
+    };
+    const slot=(label,x)=>!x?'':`<div class="forecast-item ${x.chove?'wet':'dry'}">
+      <span class="f-label">${label}</span><span class="f-val">${x.icone} ${x.temp}°C</span>
+      <span class="f-rain">${x.chove?'☔ Vai chover':'🌂 Sem chuva'} · ${x.prob}%</span></div>`;
+    const alm=janela('12'),sai=janela('18');
+    fc.style.display='flex';
+    fc.innerHTML=slot('Almoço · 12h',alm)+slot('Saída · 18h',sai);
+
+    const a=alm&&alm.chove,s=sai&&sai.chove;
+    alerta.innerHTML=a&&s?'<div class="rain-alert wet">☔ Leve guarda-chuva: chuva no almoço e na saída.</div>'
+      :a?'<div class="rain-alert wet">☔ Chuva prevista no almoço. Na saída deve estar seco.</div>'
+      :s?'<div class="rain-alert wet">☔ Almoço seco, mas deve chover na hora de ir embora.</div>'
+      :'<div class="rain-alert dry">🌂 Sem chuva prevista no almoço nem na saída.</div>';
+  }catch(e){console.error(e);main.innerHTML='<div class="loading-text">Previsão indisponível.</div>'}
+}
+
+function obterIconeClima(c){
+  const m={0:['☀️','Céu limpo'],1:['🌤️','Principalmente limpo'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],45:['🌫️','Nevoeiro'],48:['🌫️','Nevoeiro com geada'],51:['🌦️','Chuvisco leve'],53:['🌦️','Chuvisco moderado'],55:['🌧️','Chuvisco denso'],61:['🌧️','Chuva leve'],63:['🌧️','Chuva moderada'],65:['🌧️','Chuva forte'],71:['🌨️','Neve leve'],73:['🌨️','Neve moderada'],75:['🌨️','Neve forte'],80:['🌦️','Pancadas leves'],81:['🌧️','Pancadas moderadas'],82:['⛈️','Pancadas violentas'],95:['⛈️','Trovoada'],96:['⛈️','Trovoada com granizo'],99:['⛈️','Trovoada forte com granizo']};
+  const x=m[c]||['🌡️','Condição desconhecida']; return {icone:x[0],descricao:x[1]};
+}
+
+async function carregarFraseMotivacional(){
+  const box=document.getElementById('quoteContent');
+  const fr=[{t:'A melhor maneira de prever o futuro é criá-lo.',a:'Peter Drucker'},{t:'O sucesso é a soma de pequenos esforços repetidos dia após dia.',a:'Robert Collier'},{t:'Acredite que você pode e você já está no meio do caminho.',a:'Theodore Roosevelt'}];
+  const f=fr[Math.floor(Math.random()*fr.length)];
+  box.innerHTML=`<p class="quote-text">"${f.t}"</p><p class="quote-author">— ${f.a}</p>`;
+  try{
+    const r=await fetch('https://quoteslate.vercel.app/api/quotes/random?tags=motivation&maxLength=160'); if(!r.ok)return;
+    const d=await r.json();
+    if(d&&typeof d.text==='string'&&d.text.trim())box.innerHTML=`<p class="quote-text">"${escapeHtml(d.text)}"</p><p class="quote-author">— ${escapeHtml(d.author||'Anônimo')}</p>`;
+  }catch{}
+}
+
+// ---------- TASKS RÁPIDAS ----------
+let quickTasks=JSON.parse(localStorage.getItem('@acelera:quickTasks')||'[]');
+const salvarTasks=()=>localStorage.setItem('@acelera:quickTasks',JSON.stringify(quickTasks));
+
+function renderizarQuickTasks(){
+  const list=document.getElementById('quickTaskList');
+  const pend=quickTasks.filter(t=>!t.done).length, feitas=quickTasks.length-pend;
+  document.getElementById('qtMeta').textContent=quickTasks.length?`${pend} pendente${pend!==1?'s':''}`:'';
+  document.getElementById('btnClear').style.display=feitas?'block':'none';
+  if(!quickTasks.length){list.innerHTML='<div class="empty">Nenhuma task. Digite acima e aperte Enter.</div>';return}
+  // pendentes primeiro, concluídas no fim (índice original preservado)
+  const ord=quickTasks.map((t,i)=>({t,i})).sort((a,b)=>a.t.done-b.t.done);
+  list.innerHTML=ord.map(({t,i})=>`<div class="quick-task-item ${t.done?'done':''}">
+    <div class="quick-task-check" onclick="toggleQuickTask(${i})">${t.done?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+    <span class="quick-task-title">${escapeHtml(t.title)}</span>
+    <button class="btn-del-task" title="Excluir" onclick="delQuickTask(${i})"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+  </div>`).join('');
+}
+function adicionarQuickTask(){
+  const inp=document.getElementById('quickTaskInput'),title=inp.value.trim();
+  if(!title){inp.focus();return}
+  quickTasks.unshift({title,done:false}); inp.value=''; salvarTasks(); renderizarQuickTasks(); inp.focus();
+}
+function toggleQuickTask(i){quickTasks[i].done=!quickTasks[i].done;salvarTasks();renderizarQuickTasks()}
+function delQuickTask(i){quickTasks.splice(i,1);salvarTasks();renderizarQuickTasks()}
+function limparConcluidas(){quickTasks=quickTasks.filter(t=>!t.done);salvarTasks();renderizarQuickTasks()}
+
+// ---------- NOTÍCIAS ----------
+async function carregarNoticias(){
+  const box=document.getElementById('newsList');
+  try{
+    const res=await Promise.allSettled(FEEDS.map(f=>fetch(RSS2JSON+encodeURIComponent(f.url),{signal:AbortSignal.timeout(10000)}).then(r=>r.ok?r.json():null).catch(()=>null)));
+    let art=[];
+    res.forEach((r,i)=>{
+      if(r.status!=='fulfilled'||!r.value||r.value.status!=='ok')return;
+      (r.value.items||[]).slice(0,6).forEach(it=>{
+        const titulo=(it.title||'').trim(),link=it.link||''; if(!titulo||!link)return;
+        art.push({titulo,link,resumo:limparHtml(it.description||'').substring(0,280),imagem:extrairImagem(it),fonte:FEEDS[i].tag,prioridade:FEEDS[i].prioridade,data:it.pubDate||''});
       });
-
-      // ============================================================
-      // SAUDAÇÃO
-      // ============================================================
-      function renderizarSaudacao() {
-        const agora = new Date();
-        const hora = agora.getHours();
-        let saudacao = 'Bom dia';
-        let emoji = '☀️';
-        if (hora >= 12 && hora < 18) { saudacao = 'Boa tarde'; emoji = '🌤️'; }
-        else if (hora >= 18) { saudacao = 'Boa noite'; emoji = '🌙'; }
-
-        document.getElementById('greetingText').textContent = `${saudacao}, Moisa! ${emoji}`;
-        document.getElementById('heroEmoji').textContent = emoji;
-
-        const diasSemana = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-        const dia = String(agora.getDate()).padStart(2, '0');
-        const mes = String(agora.getMonth() + 1).padStart(2, '0');
-        const ano = agora.getFullYear();
-        document.getElementById('dateLine').textContent = `Hoje é ${diasSemana[agora.getDay()]} (${dia}/${mes}/${ano})`;
-      }
-
-      // ============================================================
-      // LEMBRETES
-      // ============================================================
-      async function carregarLembretesDoDia() {
-        const container = document.getElementById('remindersList');
-        const countBadge = document.getElementById('remindersCount');
-        try {
-          const { data: { user } } = await supabaseClient.auth.getUser();
-          if (!user) return;
-          const hojeStr = new Date().toISOString().split('T')[0];
-          const { data, error } = await supabaseClient
-            .from('reminders').select('*').eq('user_id', user.id)
-            .eq('data', hojeStr).eq('concluido', false)
-            .order('urgente', { ascending: false });
-          if (error) throw error;
-          const lembretes = data || [];
-          countBadge.textContent = lembretes.length;
-          if (lembretes.length === 0) {
-            container.innerHTML = '<div class="dash-empty">Nenhum lembrete para hoje. 🎉</div>';
-            return;
-          }
-          container.innerHTML = lembretes.map(item => `
-            <div class="dash-list-item ${item.urgente ? 'urgent' : ''}">
-              <span class="item-title">${escapeHtml(item.titulo)}</span>
-              ${item.urgente ? '<span class="item-meta">⚡ Urgente</span>' : ''}
-            </div>
-          `).join('');
-        } catch (err) {
-          console.error(err);
-          container.innerHTML = '<div class="dash-empty">Erro ao carregar lembretes.</div>';
-        }
-      }
-
-      // ============================================================
-      // SOLICITAÇÕES
-      // ============================================================
-      async function carregarSolicitacoesAtencao() {
-        const container = document.getElementById('solicitacoesList');
-        const countBadge = document.getElementById('solicitacoesCount');
-        try {
-          const { data: { user } } = await supabaseClient.auth.getUser();
-          if (!user) return;
-          const { data, error } = await supabaseClient
-            .from('solicitacoes').select('*').eq('user_id', user.id)
-            .neq('status', 'Concluída');
-          if (error) throw error;
-          const todas = data || [];
-          const hojeStr = new Date().toISOString().split('T')[0];
-          const atencao = todas.filter(s => {
-            if (s.tipo_solicitacao === 'Cancelamento' && s.data_efetivacao && String(s.data_efetivacao).slice(0,10) === hojeStr) return true;
-            if (s.status === 'Sem Retorno 1° Dia' || s.status === 'Sem Retorno 2° Dia' || s.status === 'Atenção') return true;
-            return false;
-          });
-          countBadge.textContent = atencao.length;
-          if (atencao.length === 0) {
-            container.innerHTML = '<div class="dash-empty">Nenhuma solicitação crítica. 👍</div>';
-            return;
-          }
-          const ordem = { 'Atenção': 0, 'Sem Retorno 2° Dia': 1, 'Sem Retorno 1° Dia': 2 };
-          atencao.sort((a,b) => (ordem[a.status] ?? 9) - (ordem[b.status] ?? 9));
-          container.innerHTML = atencao.map(item => {
-            let classe = 'warning', meta = item.status;
-            if (item.status === 'Atenção') { classe = 'urgent'; meta = '3° dia sem retorno'; }
-            else if (item.status === 'Sem Retorno 2° Dia') { classe = 'attention'; meta = '2° dia sem retorno'; }
-            else if (item.status === 'Sem Retorno 1° Dia') { classe = 'warning'; meta = '1° dia sem retorno'; }
-            else if (item.tipo_solicitacao === 'Cancelamento' && item.data_efetivacao) { meta = 'Efetiva hoje'; classe = 'urgent'; }
-            return `<div class="dash-list-item ${classe}">
-              <span class="item-title">${escapeHtml(item.nome_cliente)} <span style="color:#8e94a8;font-weight:400;font-size:0.78rem">(${escapeHtml(item.protocolo)})</span></span>
-              <span class="item-meta">${meta}</span>
-            </div>`;
-          }).join('');
-        } catch (err) {
-          console.error(err);
-          container.innerHTML = '<div class="dash-empty">Erro ao carregar solicitações.</div>';
-        }
-      }
-
-      // ============================================================
-      // CLIMA
-      // ============================================================
-      async function carregarClima() {
-        const container = document.getElementById('weatherContent');
-        try {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${VINHEDO_LAT}&longitude=${VINHEDO_LON}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=America/Sao_Paulo&forecast_days=1`;
-          const response = await fetch(url);
-          if (!response.ok) throw new Error('Falha na API de clima');
-          const data = await response.json();
-          const current = data.current, daily = data.daily, hourly = data.hourly;
-          const temp = Math.round(current.temperature_2m);
-          const tempMax = Math.round(daily.temperature_2m_max[0]);
-          const tempMin = Math.round(daily.temperature_2m_min[0]);
-          const umidade = current.relative_humidity_2m;
-          const vento = Math.round(current.wind_speed_10m);
-          const weatherInfo = obterIconeClima(current.weather_code);
-          const idx12 = hourly.time.findIndex(t => t.includes('T12:00'));
-          const idx18 = hourly.time.findIndex(t => t.includes('T18:00'));
-          const almocoTemp = idx12 >= 0 ? Math.round(hourly.temperature_2m[idx12]) : null;
-          const almocoIcon = idx12 >= 0 ? obterIconeClima(hourly.weather_code[idx12]) : null;
-          const saidaTemp = idx18 >= 0 ? Math.round(hourly.temperature_2m[idx18]) : null;
-          const saidaIcon = idx18 >= 0 ? obterIconeClima(hourly.weather_code[idx18]) : null;
-          container.innerHTML = `
-            <div class="weather-icon">${weatherInfo.icone}</div>
-            <div class="weather-info">
-              <div class="temp">${temp}°C</div>
-              <div class="desc">${weatherInfo.descricao} · Máx ${tempMax}° / Mín ${tempMin}°</div>
-              <div class="location">Vinhedo - SP · Umidade ${umidade}% · Vento ${vento} km/h</div>
-              <div class="weather-forecast">
-                <div>🍽️ <strong>Almoço (12h–14h):</strong> ${almocoIcon ? almocoIcon.icone : ''} ${almocoTemp !== null ? almocoTemp + '°C' : '—'} ${almocoIcon ? '· ' + almocoIcon.descricao : ''}</div>
-                <div>🏠 <strong>Saída (18h):</strong> ${saidaIcon ? saidaIcon.icone : ''} ${saidaTemp !== null ? saidaTemp + '°C' : '—'} ${saidaIcon ? '· ' + saidaIcon.descricao : ''}</div>
-              </div>
-            </div>`;
-        } catch (err) {
-          console.error(err);
-          container.innerHTML = '<div class="dash-empty">Não foi possível carregar a previsão.</div>';
-        }
-      }
-
-      function obterIconeClima(codigo) {
-        const mapa = {
-          0:{icone:'☀️',descricao:'Céu limpo'}, 1:{icone:'🌤️',descricao:'Principalmente limpo'},
-          2:{icone:'⛅',descricao:'Parcialmente nublado'}, 3:{icone:'☁️',descricao:'Nublado'},
-          45:{icone:'🌫️',descricao:'Nevoeiro'}, 48:{icone:'🌫️',descricao:'Nevoeiro com geada'},
-          51:{icone:'🌦️',descricao:'Chuvisco leve'}, 53:{icone:'🌦️',descricao:'Chuvisco moderado'},
-          55:{icone:'🌧️',descricao:'Chuvisco denso'}, 61:{icone:'🌧️',descricao:'Chuva leve'},
-          63:{icone:'🌧️',descricao:'Chuva moderada'}, 65:{icone:'🌧️',descricao:'Chuva forte'},
-          71:{icone:'🌨️',descricao:'Neve leve'}, 73:{icone:'🌨️',descricao:'Neve moderada'},
-          75:{icone:'🌨️',descricao:'Neve forte'}, 80:{icone:'🌦️',descricao:'Pancadas leves'},
-          81:{icone:'🌧️',descricao:'Pancadas moderadas'}, 82:{icone:'⛈️',descricao:'Pancadas violentas'},
-          95:{icone:'⛈️',descricao:'Trovoada'}, 96:{icone:'⛈️',descricao:'Trovoada com granizo'},
-          99:{icone:'⛈️',descricao:'Trovoada forte com granizo'},
-        };
-        return mapa[codigo] || {icone:'🌡️',descricao:'Condição desconhecida'};
-      }
-
-      // ============================================================
-      // FRASE
-      // ============================================================
-      async function carregarFraseMotivacional() {
-        const container = document.getElementById('quoteContent');
-        const frasesLocais = [
-          { texto: 'O sucesso é a soma de pequenos esforços repetidos dia após dia.', autor: 'Robert Collier' },
-          { texto: 'Acredite que você pode e você já está no meio do caminho.', autor: 'Theodore Roosevelt' },
-          { texto: 'A melhor maneira de prever o futuro é criá-lo.', autor: 'Peter Drucker' },
-          { texto: 'Não é sobre ter todas as respostas, é sobre estar disposto a encontrá-las.', autor: 'Anônimo' },
-        ];
-
-        const f = frasesLocais[Math.floor(Math.random() * frasesLocais.length)];
-        container.innerHTML = `<p class="quote-text">"${f.texto}"</p><p class="quote-author">— ${f.autor}</p>`;
-
-        try {
-          const res = await fetch('https://quoteslate.vercel.app/api/quotes/random?tags=motivation&maxLength=160');
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data && typeof data.text === 'string' && data.text.trim() !== '') {
-            container.innerHTML = `<p class="quote-text">"${escapeHtml(data.text)}"</p><p class="quote-author">— ${escapeHtml(data.author || 'Anônimo')}</p>`;
-          }
-        } catch {
-          // fallback já renderizado
-        }
-      }
-
-      // ============================================================
-      // NOTÍCIAS (RSS via rss2json)
-      // ============================================================
-      async function carregarNoticias() {
-        const container = document.getElementById('newsList');
-
-        try {
-          const promessas = FEEDS.map(feed =>
-            fetch(RSS2JSON + encodeURIComponent(feed.url), { signal: AbortSignal.timeout(10000) })
-              .then(r => r.ok ? r.json() : null)
-              .catch(() => null)
-          );
-
-          const resultados = await Promise.allSettled(promessas);
-          let artigos = [];
-
-          resultados.forEach((r, i) => {
-            if (r.status !== 'fulfilled' || !r.value || r.value.status !== 'ok') return;
-            const tag = FEEDS[i].tag;
-            const items = r.value.items || [];
-            items.slice(0, 4).forEach(item => {
-              const titulo = (item.title || '').trim();
-              const link = item.link || '';
-              if (!titulo || !link) return;
-              artigos.push({
-                titulo,
-                link,
-                resumo: limparHtml(item.description || '').substring(0, 280),
-                imagem: extrairImagem(item),
-                fonte: tag,
-                data: item.pubDate || '',
-              });
-            });
-          });
-
-          const vistos = new Set();
-          artigos = artigos.filter(a => {
-            if (vistos.has(a.link)) return false;
-            vistos.add(a.link);
-            return true;
-          });
-          artigos.sort((a, b) => new Date(b.data) - new Date(a.data));
-          const exibir = artigos.slice(0, 8);
-
-          if (exibir.length === 0) {
-            container.innerHTML = '<div class="dash-empty">Não foi possível carregar as notícias agora. Tente novamente mais tarde.</div>';
-            return;
-          }
-
-          noticiasCache = exibir;
-
-          container.innerHTML = exibir.map((n, idx) => {
-            const isBrasil = n.fonte === 'Brasil';
-            const imagemHtml = n.imagem
-              ? `<img src="${escapeHtml(n.imagem)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'image-fallback\\'>📰</div>'" />`
-              : `<div class="image-fallback">📰</div>`;
-            return `
-              <div class="news-tile" onclick="abrirModalNoticia(${idx})">
-                <div class="news-tile-image">
-                  ${imagemHtml}
-                  <span class="news-tile-tag ${isBrasil ? 'tag-brasil' : 'tag-mundo'}">${n.fonte}</span>
-                </div>
-                <div class="news-tile-body">
-                  <div class="news-tile-title">${escapeHtml(n.titulo)}</div>
-                  <div class="news-tile-footer">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    ${formatarDataNoticia(n.data) || 'Hoje'}
-                  </div>
-                </div>
-              </div>`;
-          }).join('');
-        } catch (err) {
-          console.error('Erro ao carregar notícias:', err);
-          container.innerHTML = '<div class="dash-empty">Não foi possível carregar as notícias agora. Tente novamente mais tarde.</div>';
-        }
-      }
-
-      // Extrai imagem do item RSS (thumbnail, enclosure ou content)
-      function extrairImagem(item) {
-        if (item.thumbnail) return item.thumbnail;
-        if (item.enclosure && item.enclosure.link) return item.enclosure.link;
-        if (item.content) {
-          const match = item.content.match(/<img[^>]+src=["']([^"']+)["']/i);
-          if (match) return match[1];
-        }
-        if (item.description) {
-          const match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
-          if (match) return match[1];
-        }
-        return null;
-      }
-
-      function limparHtml(texto) {
-        if (!texto) return '';
-        const div = document.createElement('div');
-        div.innerHTML = texto;
-        let t = div.textContent || div.innerText || '';
-        return t.replace(/\s+/g, ' ').trim();
-      }
-
-      // ============================================================
-      // MODAL
-      // ============================================================
-      function abrirModalNoticia(index) {
-        const n = noticiasCache[index];
-        if (!n) return;
-        document.getElementById('newsModalTitle').textContent = n.titulo;
-        document.getElementById('newsModalSource').textContent = `Fonte: ${n.fonte}`;
-        document.getElementById('newsModalSummary').textContent = n.resumo || 'Resumo não disponível para esta notícia.';
-        const btn = document.getElementById('newsModalOpenBtn');
-        btn.onclick = () => window.open(n.link, '_blank', 'noopener');
-        document.getElementById('newsModal').classList.add('active');
-      }
-
-      function fecharModalNoticia() {
-        document.getElementById('newsModal').classList.remove('active');
-      }
-
-      document.getElementById('newsModal').addEventListener('click', function(e) {
-        if (e.target === this) fecharModalNoticia();
-      });
-
-      // ============================================================
-      // UTILITÁRIOS
-      // ============================================================
-      function formatarDataNoticia(dataStr) {
-        if (!dataStr) return '';
-        try {
-          const d = new Date(dataStr);
-          if (isNaN(d.getTime())) return '';
-          const dia = String(d.getDate()).padStart(2, '0');
-          const mes = String(d.getMonth() + 1).padStart(2, '0');
-          const hora = String(d.getHours()).padStart(2, '0');
-          const min = String(d.getMinutes()).padStart(2, '0');
-          return `${dia}/${mes} ${hora}:${min}`;
-        } catch { return ''; }
-      }
-
-      function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-    </script>
-  </body>
+    });
+    art=art.filter(a=>{const t=(a.titulo+' '+a.resumo).toLowerCase();return !PALAVRAS_BLOQUEADAS.some(p=>t.includes(p))&&PALAVRAS_RELEVANTES.some(p=>t.includes(p))});
+    const vistos=new Set(); art=art.filter(a=>vistos.has(a.link)?false:(vistos.add(a.link),true));
+    art.sort((a,b)=>a.prioridade!==b.prioridade?a.prioridade-b.prioridade:new Date(b.data)-new Date(a.data));
+    const ex=art.slice(0,8);
+    if(!ex.length){box.innerHTML='<div class="loading-text">Nenhuma notícia relevante.</div>';return}
+    noticiasCache=ex;
+    box.innerHTML=ex.map((n,i)=>{
+      const img=n.imagem?`<img src="${escapeHtml(n.imagem)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'image-fallback\\'>📰</div>'" />`:'<div class="image-fallback">📰</div>';
+      return `<div class="news-tile" onclick="abrirModalNoticia(${i})"><div class="news-tile-image">${img}<span class="news-tile-tag">${n.fonte}</span></div><div class="news-tile-body"><div class="news-tile-title">${escapeHtml(n.titulo)}</div><div class="news-tile-footer">🕒 ${formatarDataNoticia(n.data)||'Hoje'}</div></div></div>`;
+    }).join('');
+  }catch(e){console.error(e);box.innerHTML='<div class="loading-text">Não foi possível carregar as notícias.</div>'}
+}
+function extrairImagem(it){
+  if(it.thumbnail)return it.thumbnail;
+  if(it.enclosure&&it.enclosure.link)return it.enclosure.link;
+  for(const k of ['content','description']){if(it[k]){const m=it[k].match(/<img[^>]+src=["']([^"']+)["']/i);if(m)return m[1]}}
+  return null;
+}
+function limparHtml(t){if(!t)return '';const d=document.createElement('div');d.innerHTML=t;return (d.textContent||'').replace(/\s+/g,' ').trim()}
+function abrirModalNoticia(i){
+  const n=noticiasCache[i]; if(!n)return;
+  document.getElementById('newsModalTitle').textContent=n.titulo;
+  document.getElementById('newsModalSource').textContent=`Fonte: ${n.fonte}`;
+  document.getElementById('newsModalSummary').textContent=n.resumo||'Resumo não disponível.';
+  document.getElementById('newsModalOpenBtn').onclick=()=>window.open(n.link,'_blank','noopener');
+  document.getElementById('newsModal').classList.add('active');
+}
+function fecharModalNoticia(){document.getElementById('newsModal').classList.remove('active')}
+document.getElementById('newsModal').addEventListener('click',function(e){if(e.target===this)fecharModalNoticia()});
+function formatarDataNoticia(s){
+  if(!s)return '';const d=new Date(s);if(isNaN(d))return '';
+  const p=n=>String(n).padStart(2,'0');return `${p(d.getDate())}/${p(d.getMonth()+1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function escapeHtml(t){if(!t)return '';const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+</script>
+</body>
 </html>
